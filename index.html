@@ -2,160 +2,100 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>GNSS Live Tracker - 2 Antenas + Terminais com Log</title>
-
-  <!-- Firebase -->
+  <title>GNSS Dual Tracker</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
       max-width: 1200px;
       margin: 2rem auto;
     }
-    h1 {
-      text-align: center;
-    }
-    .container {
-      display: flex;
-      gap: 1rem;
-      justify-content: space-between;
-    }
-    .terminal-map-block {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #ccc;
-      padding: 1rem;
-      border-radius: 8px;
-    }
     pre {
       background: #f0f0f0;
-      padding: 0.8rem;
+      padding: 1rem;
       border-radius: 4px;
       overflow-x: auto;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
     }
-    pre.terminal {
+    #terminal, #terminal2 {
       height: 200px;
       background: #000;
       color: #0f0;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-y: scroll;
       font-family: monospace;
       white-space: pre-wrap;
-      overflow-y: auto;
-      margin-bottom: 1rem;
     }
-    #map1, #map2 {
+    .map-container {
+      display: flex;
+      gap: 20px;
+      margin-top: 1rem;
+    }
+    .map-box {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+    .map {
       height: 300px;
-      width: 100%;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-      margin-bottom: 0.8rem;
+    }
+    .controls {
+      margin-top: 1rem;
     }
     button {
-      padding: 8px 16px;
-      margin-right: 8px;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-    .info {
-      margin-bottom: 0.4rem;
-    }
-    label {
-      font-weight: normal;
-      font-size: 0.9rem;
-    }
-    .log-controls {
-      margin-bottom: 0.8rem;
+      padding: 10px;
+      margin-right: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>GNSS Live Tracker - 2 Antenas com Log</h1>
-
-  <div class="container">
-
-    <!-- TERMINAL & MAP 1 -->
-    <section class="terminal-map-block">
+  <h1>GNSS Dual Tracker</h1>
+  <div class="map-container">
+    <div class="map-box">
       <h2>Antena 1</h2>
-
-      <div class="log-controls">
-        <button id="startLogBtn1">Iniciar Log</button>
-        <button id="pauseLogBtn1" disabled>Pausar Log</button>
-        <button id="stopLogBtn1" disabled>Parar Log</button>
-        <label>
-          <input type="checkbox" id="includeTimestamp1" checked>
-          Incluir timestamp no log
-        </label>
+      <p><b>Latitude:</b> <span id="lat_rmc">—</span></p>
+      <p><b>Longitude:</b> <span id="lon_rmc">—</span></p>
+      <p><b>Velocidade (km/h):</b> <span id="speed">—</span></p>
+      <p><b>Direção (°):</b> <span id="heading">—</span></p>
+      <p><b>Data:</b> <span id="date">—</span></p>
+      <p><b>Satélites:</b> <span id="sats">—</span></p>
+      <pre id="raw">—</pre>
+      <pre id="terminal">Aguardando dados...</pre>
+      <div class="controls">
+        <button id="startBtn">Iniciar Log</button>
+        <button id="pauseBtn" disabled>Pausar Log</button>
+        <button id="stopBtn" disabled>Parar Log</button>
+        <button onclick="downloadKML(path1, 'antena1.kml')">Download KML 1</button>
+        <button onclick="clearPath(path1, polyline1)">Limpar Linha</button>
       </div>
-
-      <div class="info"><b>Latitude:</b> <span id="lat_rmc_1">—</span></div>
-      <div class="info"><b>Longitude:</b> <span id="lon_rmc_1">—</span></div>
-      <div class="info"><b>Velocidade (km/h):</b> <span id="speed_1">—</span></div>
-      <div class="info"><b>Direção (°):</b> <span id="heading_1">—</span></div>
-      <div class="info"><b>Data:</b> <span id="date_1">—</span></div>
-
-      <hr />
-
-      <div><b>Sentença RAW (última):</b></div>
-      <pre id="raw_1">—</pre>
-
-      <div><b>Terminal GNSS:</b></div>
-      <pre id="terminal_1" class="terminal">Aguardando dados...</pre>
-
-      <div>
-        <button id="clearPathBtn1">🧹 Limpar Linha do Mapa</button>
-        <button id="downloadKmlBtn1">📥 Baixar Trajeto (KML)</button>
-      </div>
-
-      <div id="map1"></div>
-    </section>
-
-    <!-- TERMINAL & MAP 2 -->
-    <section class="terminal-map-block">
+      <div id="map1" class="map"></div>
+    </div>
+    <div class="map-box">
       <h2>Antena 2</h2>
-
-      <div class="log-controls">
-        <button id="startLogBtn2">Iniciar Log</button>
-        <button id="pauseLogBtn2" disabled>Pausar Log</button>
-        <button id="stopLogBtn2" disabled>Parar Log</button>
-        <label>
-          <input type="checkbox" id="includeTimestamp2" checked>
-          Incluir timestamp no log
-        </label>
+      <p><b>Latitude 2:</b> <span id="lat_rmc2">—</span></p>
+      <p><b>Longitude 2:</b> <span id="lon_rmc2">—</span></p>
+      <p><b>Velocidade 2 (km/h):</b> <span id="speed2">—</span></p>
+      <p><b>Direção 2 (°):</b> <span id="heading2">—</span></p>
+      <p><b>Data 2:</b> <span id="date2">—</span></p>
+      <p><b>Satélites 2:</b> <span id="sats2">—</span></p>
+      <pre id="raw2">—</pre>
+      <pre id="terminal2">Aguardando dados da segunda antena...</pre>
+      <div class="controls">
+        <button id="startBtn2">Iniciar Log 2</button>
+        <button id="pauseBtn2" disabled>Pausar Log 2</button>
+        <button id="stopBtn2" disabled>Parar Log 2</button>
+        <button onclick="downloadKML(path2, 'antena2.kml')">Download KML 2</button>
+        <button onclick="clearPath(path2, polyline2)">Limpar Linha</button>
       </div>
-
-      <div class="info"><b>Latitude:</b> <span id="lat_rmc_2">—</span></div>
-      <div class="info"><b>Longitude:</b> <span id="lon_rmc_2">—</span></div>
-      <div class="info"><b>Velocidade (km/h):</b> <span id="speed_2">—</span></div>
-      <div class="info"><b>Direção (°):</b> <span id="heading_2">—</span></div>
-      <div class="info"><b>Data:</b> <span id="date_2">—</span></div>
-
-      <hr />
-
-      <div><b>Sentença RAW (última):</b></div>
-      <pre id="raw_2">—</pre>
-
-      <div><b>Terminal GNSS:</b></div>
-      <pre id="terminal_2" class="terminal">Aguardando dados...</pre>
-
-      <div>
-        <button id="clearPathBtn2">🧹 Limpar Linha do Mapa</button>
-        <button id="downloadKmlBtn2">📥 Baixar Trajeto (KML)</button>
-      </div>
-
-      <div id="map2"></div>
-    </section>
+      <div id="map2" class="map"></div>
+    </div>
   </div>
 
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
       authDomain: "log--analyzer-web.firebaseapp.com",
@@ -168,6 +108,13 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    function appendToTerminal(term, line) {
+      const timestamp = new Date().toLocaleTimeString();
+      if (term.textContent.includes("Aguardando")) term.textContent = "";
+      term.textContent += `[${timestamp}] ${line}\n`;
+      term.scrollTop = term.scrollHeight;
+    }
+
     function nmeaCoordToDecimal(coord, direction) {
       if (!coord || coord.length < 4) return null;
       let degLength = (direction === 'N' || direction === 'S') ? 2 : 3;
@@ -178,247 +125,166 @@
       return dec.toFixed(6);
     }
 
-    function parseRMC(sentence) {
-      let parts = sentence.split(',');
-      if (parts.length < 12) return null;
-      if (parts[2] !== 'A') return null;
-      let lat = nmeaCoordToDecimal(parts[3], parts[4]);
-      let lon = nmeaCoordToDecimal(parts[5], parts[6]);
-      let speedKnots = parseFloat(parts[7]);
-      let speedKmh = (speedKnots * 1.852).toFixed(1);
-      let heading = parts[8];
-      let date = parts[9];
-      return { lat, lon, speedKmh, heading, date };
+    function parseGGA(sentence) {
+      const parts = sentence.split(',');
+      if (parts.length < 10) return null;
+      const lat = nmeaCoordToDecimal(parts[2], parts[3]);
+      const lon = nmeaCoordToDecimal(parts[4], parts[5]);
+      const sats = parseInt(parts[7]) || 0;
+      return { lat, lon, sats };
     }
 
-    function createTerminalAndMap(prefix, firebasePath, mapDivId, terminalId, rawId, latId, lonId, speedId, headingId, dateId, clearBtnId, downloadBtnId,
-      startLogBtnId, pauseLogBtnId, stopLogBtnId, includeTimestampId) {
-      // Elementos DOM
-      const terminal = document.getElementById(terminalId);
-      const rawDisplay = document.getElementById(rawId);
-      const latDisplay = document.getElementById(latId);
-      const lonDisplay = document.getElementById(lonId);
-      const speedDisplay = document.getElementById(speedId);
-      const headingDisplay = document.getElementById(headingId);
-      const dateDisplay = document.getElementById(dateId);
-      const clearBtn = document.getElementById(clearBtnId);
-      const downloadBtn = document.getElementById(downloadBtnId);
-      const startLogBtn = document.getElementById(startLogBtnId);
-      const pauseLogBtn = document.getElementById(pauseLogBtnId);
-      const stopLogBtn = document.getElementById(stopLogBtnId);
-      const includeTimestampCheckbox = document.getElementById(includeTimestampId);
-
-      // Mapa Leaflet
-      const initialPosition = [-23.55052, -46.633308];
-      const map = L.map(mapDivId).setView(initialPosition, 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      const marker = L.marker(initialPosition).addTo(map).bindPopup("Localização GNSS").openPopup();
-
-      let pathCoords = [];
-      let pathPolyline = null;
-
-      // Log controle
-      let isLogging = false;
-      let isPaused = false;
-      let logLines = [];
-
-      function appendToTerminal(line) {
-        const timestamp = new Date().toLocaleTimeString();
-        if (terminal.textContent.includes("Aguardando")) terminal.textContent = "";
-        terminal.textContent += `[${timestamp}] ${line}\n`;
-        terminal.scrollTop = terminal.scrollHeight;
-      }
-
-      function updateMap(lat, lon) {
-        if (!lat || !lon) return;
-        const newLatLng = [parseFloat(lat), parseFloat(lon)];
-        marker.setLatLng(newLatLng);
-        map.setView(newLatLng, map.getZoom());
-
-        pathCoords.push(newLatLng);
-        if (pathPolyline) {
-          pathPolyline.setLatLngs(pathCoords);
-        } else {
-          pathPolyline = L.polyline(pathCoords, { color: 'red', weight: 3 }).addTo(map);
-        }
-      }
-
-      clearBtn.addEventListener("click", () => {
-        if (pathPolyline) {
-          map.removeLayer(pathPolyline);
-          pathPolyline = null;
-        }
-        pathCoords = [];
-        appendToTerminal("Trajeto limpo no mapa.");
-      });
-
-      downloadBtn.addEventListener("click", () => {
-        if (pathCoords.length === 0) {
-          alert("Nenhum trajeto disponível para exportar.");
-          return;
-        }
-        downloadKML();
-      });
-
-      // Função para download KML
-      function downloadKML() {
-        let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
-<Document>
-  <name>GNSS Trajeto</name>
-  <Style id="lineStyle">
-    <LineStyle>
-      <color>ff0000ff</color>
-      <width>4</width>
-    </LineStyle>
-  </Style>
-  <Placemark>
-    <name>Trajeto GNSS</name>
-    <styleUrl>#lineStyle</styleUrl>
-    <LineString>
-      <tessellate>1</tessellate>
-      <coordinates>
-        ${pathCoords.map(([lat, lon]) => `${lon},${lat},0`).join('\n        ')}
-      </coordinates>
-    </LineString>
-  </Placemark>
-</Document>
-</kml>`;
-
-        const blob = new Blob([kmlContent], { type: "application/vnd.google-earth.kml+xml" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `trajeto_gnss_${new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")}.kml`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        appendToTerminal("Download KML iniciado.");
-      }
-
-      // Botões de log
-      startLogBtn.addEventListener("click", () => {
-        isLogging = true;
-        isPaused = false;
-        logLines = [];
-        appendToTerminal(">>> LOG INICIADO");
-        startLogBtn.disabled = true;
-        pauseLogBtn.disabled = false;
-        stopLogBtn.disabled = false;
-      });
-
-      pauseLogBtn.addEventListener("click", () => {
-        isPaused = !isPaused;
-        pauseLogBtn.textContent = isPaused ? "Retomar Log" : "Pausar Log";
-        appendToTerminal(isPaused ? ">>> LOG PAUSADO" : ">>> LOG RETOMADO");
-      });
-
-      stopLogBtn.addEventListener("click", () => {
-        if (!isLogging) return;
-        isLogging = false;
-        isPaused = false;
-        appendToTerminal(">>> LOG PARADO");
-        startLogBtn.disabled = false;
-        pauseLogBtn.disabled = true;
-        pauseLogBtn.textContent = "Pausar Log";
-        stopLogBtn.disabled = true;
-
-        if (logLines.length === 0) {
-          appendToTerminal("Nenhum dado para salvar no log.");
-          return;
-        }
-
-        const blob = new Blob([logLines.join('\n')], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `gnss_log_${new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        appendToTerminal("Download do log concluído.");
-      });
-
-      // Listener Firebase
-      const rawRef = db.ref(firebasePath);
-      rawRef.on("value", function(snapshot) {
-        let raw = (snapshot.val() || "").trim();
-        if (!raw) return;
-
-        rawDisplay.textContent = raw;
-        appendToTerminal(raw);
-
-        if (raw.indexOf("$GPRMC") === 0) {
-          let rmc = parseRMC(raw);
-          if (rmc) {
-            latDisplay.textContent = rmc.lat ?? "—";
-            lonDisplay.textContent = rmc.lon ?? "—";
-            speedDisplay.textContent = rmc.speedKmh ?? "—";
-            headingDisplay.textContent = rmc.heading ?? "—";
-            dateDisplay.textContent = rmc.date ?? "—";
-            updateMap(rmc.lat, rmc.lon);
-          } else {
-            appendToTerminal("Sentença RMC inválida.");
-          }
-        } else {
-          appendToTerminal("Sentença não reconhecida para parser.");
-        }
-
-        // Log lines
-        if (isLogging && !isPaused) {
-          const now = new Date();
-          if (includeTimestampCheckbox.checked) {
-            logLines.push(`[${now.toISOString()}] ${raw}`);
-          } else {
-            logLines.push(raw);
-          }
-        }
-      });
+    function parseVTG(sentence) {
+      const parts = sentence.split(',');
+      if (parts.length < 9) return null;
+      return {
+        heading: parts[1],
+        speed: (parseFloat(parts[7]) || 0).toFixed(1),
+        date: new Date().toISOString().slice(0, 10)
+      };
     }
 
-    // Inicializa os dois terminais + mapas + logs
-    createTerminalAndMap(
-      "1",
-      "gnss/raw",
-      "map1",
-      "terminal_1",
-      "raw_1",
-      "lat_rmc_1",
-      "lon_rmc_1",
-      "speed_1",
-      "heading_1",
-      "date_1",
-      "clearPathBtn1",
-      "downloadKmlBtn1",
-      "startLogBtn1",
-      "pauseLogBtn1",
-      "stopLogBtn1",
-      "includeTimestamp1"
-    );
+    let map1 = L.map('map1').setView([-30, -51], 15);
+    let map2 = L.map('map2').setView([-30, -51], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map1);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map2);
+    let marker1 = L.marker([-30, -51]).addTo(map1);
+    let marker2 = L.marker([-30, -51]).addTo(map2);
+    let path1 = [], path2 = [];
+    let polyline1 = L.polyline([], { color: 'red' }).addTo(map1);
+    let polyline2 = L.polyline([], { color: 'blue' }).addTo(map2);
 
-    createTerminalAndMap(
-      "2",
-      "gnss/raw2",
-      "map2",
-      "terminal_2",
-      "raw_2",
-      "lat_rmc_2",
-      "lon_rmc_2",
-      "speed_2",
-      "heading_2",
-      "date_2",
-      "clearPathBtn2",
-      "downloadKmlBtn2",
-      "startLogBtn2",
-      "pauseLogBtn2",
-      "stopLogBtn2",
-      "includeTimestamp2"
-    );
+    function clearPath(path, polyline) {
+      path.length = 0;
+      polyline.setLatLngs([]);
+    }
+
+    function downloadKML(path, filename) {
+      if (!path.length) return;
+      let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<Placemark><LineString><coordinates>` +
+        path.map(p => `${p[1]},${p[0]},0`).join(' ') +
+        `</coordinates></LineString></Placemark></Document></kml>`;
+      const blob = new Blob([kml], { type: "application/vnd.google-earth.kml+xml" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    const terminal = document.getElementById("terminal");
+    const terminal2 = document.getElementById("terminal2");
+
+    let isLogging = false, isPaused = false, logLines = [];
+    document.getElementById("startBtn").onclick = () => {
+      isLogging = true;
+      isPaused = false;
+      logLines = [];
+      appendToTerminal(terminal, ">>> LOG INICIADO");
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("pauseBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = false;
+    };
+    document.getElementById("pauseBtn").onclick = () => {
+      isPaused = !isPaused;
+      document.getElementById("pauseBtn").textContent = isPaused ? "Retomar Log" : "Pausar Log";
+      appendToTerminal(terminal, isPaused ? ">>> LOG PAUSADO" : ">>> LOG RETOMADO");
+    };
+    document.getElementById("stopBtn").onclick = () => {
+      isLogging = false;
+      isPaused = false;
+      appendToTerminal(terminal, ">>> LOG PARADO");
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("pauseBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = true;
+      const blob = new Blob([logLines.join('\n')], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `log_antena1_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+      a.click();
+    };
+
+    let isLogging2 = false, isPaused2 = false, logLines2 = [];
+    document.getElementById("startBtn2").onclick = () => {
+      isLogging2 = true;
+      isPaused2 = false;
+      logLines2 = [];
+      appendToTerminal(terminal2, ">>> LOG 2 INICIADO");
+      document.getElementById("startBtn2").disabled = true;
+      document.getElementById("pauseBtn2").disabled = false;
+      document.getElementById("stopBtn2").disabled = false;
+    };
+    document.getElementById("pauseBtn2").onclick = () => {
+      isPaused2 = !isPaused2;
+      document.getElementById("pauseBtn2").textContent = isPaused2 ? "Retomar Log 2" : "Pausar Log 2";
+      appendToTerminal(terminal2, isPaused2 ? ">>> LOG 2 PAUSADO" : ">>> LOG 2 RETOMADO");
+    };
+    document.getElementById("stopBtn2").onclick = () => {
+      isLogging2 = false;
+      isPaused2 = false;
+      appendToTerminal(terminal2, ">>> LOG 2 PARADO");
+      document.getElementById("startBtn2").disabled = false;
+      document.getElementById("pauseBtn2").disabled = true;
+      document.getElementById("stopBtn2").disabled = true;
+      const blob = new Blob([logLines2.join('\n')], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `log_antena2_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+      a.click();
+    };
+
+    db.ref("gnss/raw").on("value", snap => {
+      const raw = snap.val();
+      if (!raw) return;
+      document.getElementById("raw").textContent = raw;
+      appendToTerminal(terminal, raw);
+      if (isLogging && !isPaused) logLines.push(`[${new Date().toISOString()}] ${raw}`);
+      if (raw.startsWith("$GPGGA")) {
+        const data = parseGGA(raw);
+        if (data) {
+          document.getElementById("lat_rmc").textContent = data.lat;
+          document.getElementById("lon_rmc").textContent = data.lon;
+          document.getElementById("sats").textContent = data.sats;
+          marker1.setLatLng([+data.lat, +data.lon]);
+          map1.setView([+data.lat, +data.lon]);
+          path1.push([+data.lat, +data.lon]);
+          polyline1.setLatLngs(path1);
+        }
+      } else if (raw.startsWith("$GPVTG")) {
+        const vtg = parseVTG(raw);
+        if (vtg) {
+          document.getElementById("speed").textContent = vtg.speed;
+          document.getElementById("heading").textContent = vtg.heading;
+          document.getElementById("date").textContent = vtg.date;
+        }
+      }
+    });
+
+    db.ref("gnss/raw2").on("value", snap => {
+      const raw = snap.val();
+      if (!raw) return;
+      document.getElementById("raw2").textContent = raw;
+      appendToTerminal(terminal2, raw);
+      if (isLogging2 && !isPaused2) logLines2.push(`[${new Date().toISOString()}] ${raw}`);
+      if (raw.startsWith("$GPGGA")) {
+        const data = parseGGA(raw);
+        if (data) {
+          document.getElementById("lat_rmc2").textContent = data.lat;
+          document.getElementById("lon_rmc2").textContent = data.lon;
+          document.getElementById("sats2").textContent = data.sats;
+          marker2.setLatLng([+data.lat, +data.lon]);
+          map2.setView([+data.lat, +data.lon]);
+          path2.push([+data.lat, +data.lon]);
+          polyline2.setLatLngs(path2);
+        }
+      } else if (raw.startsWith("$GPVTG")) {
+        const vtg = parseVTG(raw);
+        if (vtg) {
+          document.getElementById("speed2").textContent = vtg.speed;
+          document.getElementById("heading2").textContent = vtg.heading;
+          document.getElementById("date2").textContent = vtg.date;
+        }
+      }
+    });
   </script>
 </body>
 </html>
