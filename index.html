@@ -2,17 +2,30 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>GNSS Dual Tracker</title>
+  <title>Log remote web AGV</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1200px;
-      margin: 2rem auto;
-    }
+     h1 {
+      text-align: center;
+      color: rgb(23, 84, 189);
+      font-size: 5em;
+      margin-top: 100px;
+      /*text-shadow: 2px 2px 10px rgba(0, 255, 255, 0.7);*/
+      /*animation: glow 2s ease-in-out infinite alternate;*/
+     }
+      
+
+body {
+  font-family: Arial, sans-serif;
+  max-width: 2000px;
+  margin: 2rem auto;
+}
+
+
+
     pre {
       background: #f0f0f0;
       padding: 1rem;
@@ -20,46 +33,78 @@
       overflow-x: auto;
     }
     #terminal, #terminal2 {
-      height: 200px;
+      height: 400px;
+      font-size: xx-large;
       background: #000;
       color: #0f0;
       padding: 1rem;
       border-radius: 4px;
-      overflow-y: scroll;
+      overflow-y: visible;
       font-family: monospace;
       white-space: pre-wrap;
+      
     }
     .map-container {
       display: flex;
-      gap: 20px;
+      gap: 0px;
       margin-top: 1rem;
     }
     .map-box {
       flex: 1;
       padding: 10px;
-      border: 2px solid #ccc;
+      border: 2px solid blue;
       border-radius: 10px;
     }
     .map {
-      height: 300px;
+      height: 500px;
     }
     .controls {
       margin-top: 1rem;
     }
-    button {
-      padding: 10px;
-      margin-right: 10px;
-    }
+button {
+  padding: 5px 8px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1e88e5, #42a5f5);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+}
+
+button:disabled {
+  background: #999;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+
+    
   </style>
+  
 </head>
 <body>
-  <h1>GNSS Dual Tracker</h1>
+  <h1>Log remote AGV</h1>
   <div class="map-container">
     <div class="map-box">
-      <h2>Antena 1</h2>
+<h2 style="color: red;">
+  <span id="title1">Receiver 1</span>
+  <input type="text" id="input1" placeholder="Nome da Antena 1" style="margin-left: 10px;">
+</h2>
+
+
       <p><b>Latitude:</b> <span id="lat_rmc">—</span></p>
       <p><b>Longitude:</b> <span id="lon_rmc">—</span></p>
-      <p><b>Velocidade (km/h):</b> <span id="speed">—</span></p>
+      <p><b>Speed (km/h):</b> <span id="speed">—</span></p>
       <p><b>Direção (°):</b> <span id="heading">—</span></p>
       <p><b>Data:</b> <span id="date">—</span></p>
       <p><b>Satélites:</b> <span id="sats">—</span></p>
@@ -75,13 +120,19 @@
       <div id="map1" class="map"></div>
     </div>
     <div class="map-box">
-      <h2>Antena 2</h2>
-      <p><b>Latitude 2:</b> <span id="lat_rmc2">—</span></p>
-      <p><b>Longitude 2:</b> <span id="lon_rmc2">—</span></p>
-      <p><b>Velocidade 2 (km/h):</b> <span id="speed2">—</span></p>
-      <p><b>Direção 2 (°):</b> <span id="heading2">—</span></p>
-      <p><b>Data 2:</b> <span id="date2">—</span></p>
-      <p><b>Satélites 2:</b> <span id="sats2">—</span></p>
+      
+<h2>
+  <span id="title2" style="color: red;">Receiver 2</span>
+  <input type="text" id="input2" placeholder="Nome da Antena 2" style="margin-left: 10px;">
+</h2>
+
+
+      <p><b>Latitude:</b> <span id="lat_rmc2">—</span></p>
+      <p><b>Longitude:</b> <span id="lon_rmc2">—</span></p>
+      <p><b>Speed(km/h):</b> <span id="speed2">—</span></p>
+      <p><b>Direção(°):</b> <span id="heading2">—</span></p>
+      <p><b>Data:</b> <span id="date2">—</span></p>
+      <p><b>Satélites:</b> <span id="sats2">—</span></p>
       <pre id="raw2">—</pre>
       <pre id="terminal2">Aguardando dados da segunda antena...</pre>
       <div class="controls">
@@ -285,6 +336,18 @@
         }
       }
     });
+
+    // Atualiza o título enquanto digita
+document.getElementById('input1').addEventListener('input', function() {
+  const value = this.value.trim();
+  document.getElementById('title1').textContent = value || 'Receiver 1';
+});
+
+document.getElementById('input2').addEventListener('input', function() {
+  const value = this.value.trim();
+  document.getElementById('title2').textContent = value || 'Receiver 2';
+});
+
   </script>
 </body>
 </html>
