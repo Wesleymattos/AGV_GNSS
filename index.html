@@ -34,7 +34,7 @@ body {
     }
     #terminal, #terminal2 {
       height: 400px;
-      font-size: xx-large;
+      font-size: large;
       background: #000;
       color: #0f0;
       padding: 1rem;
@@ -195,10 +195,12 @@ button:disabled {
       };
     }
 
-    let map1 = L.map('map1').setView([-30, -51], 15);
-    let map2 = L.map('map2').setView([-30, -51], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map1);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map2);
+    let map1 = L.map('map1').setView([-30, -51], 19);
+    let map2 = L.map('map2').setView([-30, -51], 19);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 }).addTo(map1);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 }).addTo(map2);
+
     let marker1 = L.marker([-30, -51]).addTo(map1);
     let marker2 = L.marker([-30, -51]).addTo(map2);
     let path1 = [], path2 = [];
@@ -296,7 +298,9 @@ button:disabled {
           document.getElementById("lon_rmc").textContent = data.lon;
           document.getElementById("sats").textContent = data.sats;
           marker1.setLatLng([+data.lat, +data.lon]);
-          map1.setView([+data.lat, +data.lon]);
+          map1.panTo([+data.lat, +data.lon]);
+          map2.panTo([+data.lat, +data.lon]);
+
           path1.push([+data.lat, +data.lon]);
           polyline1.setLatLngs(path1);
         }
@@ -323,7 +327,8 @@ button:disabled {
           document.getElementById("lon_rmc2").textContent = data.lon;
           document.getElementById("sats2").textContent = data.sats;
           marker2.setLatLng([+data.lat, +data.lon]);
-          map2.setView([+data.lat, +data.lon]);
+          map2.panTo([+data.lat, +data.lon]);
+
           path2.push([+data.lat, +data.lon]);
           polyline2.setLatLngs(path2);
         }
