@@ -134,7 +134,7 @@ button:disabled {
       <p><b>Data:</b> <span id="date2">—</span></p>
       <p><b>Satélites:</b> <span id="sats2">—</span></p>
       <pre id="raw2">—</pre>
-      <pre id="terminal2">Aguardando dados da segunda antena...</pre>
+      <pre id="terminal2">Aguardando dados...</pre>
       <div class="controls">
         <button id="startBtn2">Iniciar Log 2</button>
         <button id="pauseBtn2" disabled>Pausar Log 2</button>
@@ -343,15 +343,36 @@ button:disabled {
     });
 
     // Atualiza o título enquanto digita
-document.getElementById('input1').addEventListener('input', function() {
+// Atualiza título e envia para o banco
+document.getElementById('input1').addEventListener('input', function () {
   const value = this.value.trim();
   document.getElementById('title1').textContent = value || 'Receiver 1';
+  db.ref("receiver/receiver1").set(value || 'Receiver 1');
 });
 
-document.getElementById('input2').addEventListener('input', function() {
+document.getElementById('input2').addEventListener('input', function () {
   const value = this.value.trim();
   document.getElementById('title2').textContent = value || 'Receiver 2';
+  db.ref("receiver/receiver2").set(value || 'Receiver 2');
 });
+
+db.ref("receiver/receiver1").on("value", snapshot => {
+  const value = snapshot.val();
+  if (value !== null) {
+    document.getElementById("input1").value = value;
+    document.getElementById("title1").textContent = value;
+  }
+});
+
+db.ref("receiver/receiver2").on("value", snapshot => {
+  const value = snapshot.val();
+  if (value !== null) {
+    document.getElementById("input2").value = value;
+    document.getElementById("title2").textContent = value;
+  }
+});
+
+
 
   </script>
 </body>
