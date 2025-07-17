@@ -198,8 +198,8 @@ button:disabled {
     let map1 = L.map('map1').setView([-30, -51], 19);
     let map2 = L.map('map2').setView([-30, -51], 19);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 }).addTo(map1);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22 }).addTo(map2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map1);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map2);
 
     let marker1 = L.marker([-30, -51]).addTo(map1);
     let marker2 = L.marker([-30, -51]).addTo(map2);
