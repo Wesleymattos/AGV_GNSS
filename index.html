@@ -87,6 +87,25 @@ button:disabled {
   box-shadow: none;
 }
 
+p {
+    font-size: 28px;
+    position: relative;
+    left: 10px;   /* desloca tudo para direita */
+    top: 10px;    /* desloca tudo para baixo */
+    margin: 10px 0;
+    color: blue;
+}
+
+
+  #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2, #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2 {
+    font-size: 24px;        /* aumenta o tamanho dos valores */
+    font-weight: bold;      /* deixa os valores mais destacados */
+    color: #1565c0;         /* cor do texto */
+    position: static;     /* permite reposicionar */
+    left: 20px;             /* desloca 20px à direita */
+    top: 2px;               /* desloca levemente para baixo */
+  }
+  
 
     
   </style>
@@ -94,6 +113,23 @@ button:disabled {
 </head>
 <body>
   <h1>Log remote AGV</h1>
+
+<button onclick="window.open('Analise_dados.html', '_blank')">
+    Análise de dados
+</button>
+
+<button onclick="window.open('converter_nemea_kml.html', '_blank')">
+    teste1
+</button>
+
+<button onclick="window.open('converter_nemea_kml.html', '_blank')">
+    teste2
+</button>
+<button onclick="window.open('converter_nemea_kml.html', '_blank')">
+    teste4
+</button>
+
+
   <div class="map-container">
     <div class="map-box">
 <h2 style="color: red;">
@@ -107,7 +143,7 @@ button:disabled {
       <p><b>Speed (km/h):</b> <span id="speed">—</span></p>
       <p><b>Direção (°):</b> <span id="heading">—</span></p>
       <p><b>Data:</b> <span id="date">—</span></p>
-      <p><b>Satélites:</b> <span id="sats">—</span></p>
+      <p><b>Satélites 🛰️:</b> <span id="sats">—</span></p>
       <pre id="raw">—</pre>
       <pre id="terminal">Aguardando dados...</pre>
       <div class="controls">
@@ -132,7 +168,7 @@ button:disabled {
       <p><b>Speed(km/h):</b> <span id="speed2">—</span></p>
       <p><b>Direção(°):</b> <span id="heading2">—</span></p>
       <p><b>Data:</b> <span id="date2">—</span></p>
-      <p><b>Satélites:</b> <span id="sats2">—</span></p>
+      <p><b>Satélites 🛰️:</b> <span id="sats2">—</span></p>
       <pre id="raw2">—</pre>
       <pre id="terminal2">Aguardando dados...</pre>
       <div class="controls">
@@ -145,6 +181,11 @@ button:disabled {
       <div id="map2" class="map"></div>
     </div>
   </div>
+
+ 
+ <iframe src="plot_lat_lon3.html" style="width:2000px; height:2000px; border:none;"></iframe> 
+
+
 
   <script>
     const firebaseConfig = {
