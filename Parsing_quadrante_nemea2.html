@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Skyplot Duplo</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      align-items: center;
+    }
+    .container {
+      text-align: center;
+    }
+    canvas {
+      background: #fff;
+      border-radius: 50%;
+      border: 2px solid #000;
+      display: block;
+      margin: 0 auto;
+    }
+    h2 {
+      color: #1565c0;
+      margin-bottom: 10px;
+      min-width: 200px;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <h2 id="titleRaw">Skyplot Raw</h2>
+    <canvas id="skyplotRaw" width="400" height="400"></canvas>
+  </div>
+
+  <div class="container">
+    <h2 id="titleRaw2">Skyplot Raw2</h2>
+    <canvas id="skyplotRaw2" width="400" height="400"></canvas>
+  </div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
+    authDomain: "log--analyzer-web.firebaseapp.com",
+    databaseURL: "https://log--analyzer-web-default-rtdb.firebaseio.com",
+    projectId: "log--analyzer-web",
+    storageBucket: "log--analyzer-web.appspot.com",
+    messagingSenderId: "908592112855",
+    appId: "1:908592112855:web:ae60fc51e47a66390f3c92"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Atualiza o título do skyplot com o nome do receiver 1 do Firebase
+  db.ref("receiver/receiver1").on("value", snapshot => {
+    const nome = snapshot.val();
+    document.getElementById("titleRaw").textContent = nome ? `Skyplot ${nome}` : "Skyplot Raw";
+  });
+
+  // Atualiza o título do skyplot com o nome do receiver 2 do Firebase
+  db.ref("receiver/receiver2").on("value", snapshot => {
+    const nome = snapshot.val();
+    document.getElementById("titleRaw2").textContent = nome ? `Skyplot ${nome}` : "Skyplot Raw2";
+  });
+
+  function desenharQuadrante(ctx, w, h) {
+    const centerX = w / 2;
+    const centerY = h / 2;
+    const radius = w / 2 - 20;
+
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - radius);
+    ctx.lineTo(centerX, centerY + radius);
+    ctx.moveTo(centerX - radius, centerY);
+    ctx.lineTo(centerX + radius, centerY);
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    [radius / 3, (2 * radius) / 3].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, r, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#ccc';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.fillText("N", centerX, centerY - radius + 15);
+    ctx.fillText("E", centerX + radius - 15, centerY + 5);
+    ctx.fillText("S", centerX, centerY + radius - 5);
+    ctx.fillText("W", centerX - radius + 15, centerY + 5);
+
+    return radius;
+  }
+
+  function plotarSatelite(ctx, centerX, centerY, radius, azimute, elevacao, snr, prn) {
+    const angRad = (azimute - 90) * Math.PI / 180;
+    const r = radius * (1 - elevacao / 90);
+    const x = centerX + r * Math.cos(angRad);
+    const y = centerY + r * Math.sin(angRad);
+
+    let sombra = 'red';
+    if (snr > 30) sombra = 'green';
+    else if (snr > 10) sombra = 'orange';
+
+    ctx.beginPath();
+    ctx.arc(x, y, 14, 0, 2 * Math.PI);
+    ctx.fillStyle = sombra;
+    ctx.globalAlpha = 0.2;
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.font = "20px Arial";
+    ctx.fillText("🛰️", x - 10, y + 7);
+
+    ctx.fillStyle = "black";
+    ctx.font = "12px Arial";
+    ctx.fillText(prn, x + 12, y);
+  }
+
+  function processarGPGSV(ctx, w, h, linha) {
+    const centerX = w / 2;
+    const centerY = h / 2;
+    const radius = desenharQuadrante(ctx, w, h);
+
+    const campos = linha.split(',');
+    for (let i = 4; i < campos.length - 4; i += 4) {
+      const prn = campos[i];
+      const elev = parseFloat(campos[i + 1]);
+      const azim = parseFloat(campos[i + 2]);
+      const snr = parseFloat(campos[i + 3]) || 0;
+      if (prn && !isNaN(elev) && !isNaN(azim)) {
+        plotarSatelite(ctx, centerX, centerY, radius, azim, elev, snr, prn);
+      }
+    }
+  }
+
+  const canvasRaw = document.getElementById('skyplotRaw');
+  const ctxRaw = canvasRaw.getContext('2d');
+  const wRaw = canvasRaw.width;
+  const hRaw = canvasRaw.height;
+
+  const canvasRaw2 = document.getElementById('skyplotRaw2');
+  const ctxRaw2 = canvasRaw2.getContext('2d');
+  const wRaw2 = canvasRaw2.width;
+  const hRaw2 = canvasRaw2.height;
+
+  setInterval(() => {
+    db.ref("gnss/raw").once("value").then(snapshot => {
+      const linha = snapshot.val();
+      if (linha && linha.startsWith("$GPGSV")) {
+        processarGPGSV(ctxRaw, wRaw, hRaw, linha);
+      } else {
+        desenharQuadrante(ctxRaw, wRaw, hRaw);
+      }
+    });
+
+    db.ref("gnss/raw2").once("value").then(snapshot => {
+      const linha = snapshot.val();
+      if (linha && linha.startsWith("$GPGSV")) {
+        processarGPGSV(ctxRaw2, wRaw2, hRaw2, linha);
+      } else {
+        desenharQuadrante(ctxRaw2, wRaw2, hRaw2);
+      }
+    });
+  }, 1000);
+
+  // Inicializa desenho base
+  desenharQuadrante(ctxRaw, wRaw, hRaw);
+  desenharQuadrante(ctxRaw2, wRaw2, hRaw2);
+</script>
+
+</body>
+</html>

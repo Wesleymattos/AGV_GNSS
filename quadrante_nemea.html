@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Skyplot com Satélites</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      margin: 0;
+      padding: 10px;
+    }
+    canvas {
+      background: #fff;
+      border-radius: 50%;
+      border: 2px solid #000;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Skyplot - Satélites no Céu</h2>
+<input type="file" id="fileInput" accept=".nmea,.txt">
+<canvas id="skyplot" width="500" height="500"></canvas>
+
+<script>
+const canvas = document.getElementById('skyplot');
+const ctx = canvas.getContext('2d');
+const w = canvas.width;
+const h = canvas.height;
+const centerX = w / 2;
+const centerY = h / 2;
+const radius = w / 2 - 20;
+const emoji = "🛰️";
+
+// Desenha quadrante circular
+function desenharQuadrante() {
+  ctx.clearRect(0, 0, w, h);
+
+  // Círculo externo
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+  ctx.stroke();
+
+  // Linhas cruzadas (N-S, L-O)
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - radius);
+  ctx.lineTo(centerX, centerY + radius);
+  ctx.moveTo(centerX - radius, centerY);
+  ctx.lineTo(centerX + radius, centerY);
+  ctx.strokeStyle = '#888';
+  ctx.stroke();
+
+  // Círculos intermediários (30° e 60° de elevação)
+  [radius * 1 / 3, radius * 2 / 3].forEach(r => {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, r, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#ccc';
+    ctx.stroke();
+  });
+
+  // Marcação de direções
+  ctx.font = "14px Arial";
+  ctx.fillStyle = "black";
+  ctx.fillText("N", centerX - 5, centerY - radius + 15);
+  ctx.fillText("E", centerX + radius - 15, centerY + 5);
+  ctx.fillText("S", centerX - 5, centerY + radius - 5);
+  ctx.fillText("W", centerX - radius + 5, centerY + 5);
+}
+
+// Plota um satélite com emoji
+function plotarSatelite(azimute, elevacao, snr, prn) {
+  const angRad = (azimute - 90) * Math.PI / 180; // 0°=Norte no topo
+  const r = radius * (1 - elevacao / 90); // 0°=borda, 90°=centro
+  const x = centerX + r * Math.cos(angRad);
+  const y = centerY + r * Math.sin(angRad);
+
+  // Define cor de fundo conforme SNR
+  let sombra = 'red';
+  if (snr > 30) sombra = 'green';
+  else if (snr > 10) sombra = 'orange';
+
+  // Desenha sombra circular
+  ctx.beginPath();
+  ctx.arc(x, y, 14, 0, 2 * Math.PI);
+  ctx.fillStyle = sombra;
+  ctx.globalAlpha = 0.2;
+  ctx.fill();
+  ctx.globalAlpha = 1.0;
+
+  // Desenha emoji do satélite
+  ctx.font = "20px Arial";
+  ctx.fillText(emoji, x - 10, y + 7);
+
+  // Escreve PRN ao lado
+  ctx.fillStyle = "black";
+  ctx.font = "12px Arial";
+  ctx.fillText(prn, x + 12, y);
+}
+
+// Lê o arquivo
+document.getElementById('fileInput').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    desenharQuadrante();
+    const linhas = e.target.result.split(/\r?\n/);
+
+    linhas.forEach(linha => {
+      if (linha.startsWith('$GPGSV')) {
+        const campos = linha.split(',');
+        for (let i = 4; i < campos.length - 4; i += 4) {
+          const prn = campos[i];
+          const elev = parseFloat(campos[i + 1]);
+          const azim = parseFloat(campos[i + 2]);
+          const snr = parseFloat(campos[i + 3]) || 0;
+          if (prn && !isNaN(elev) && !isNaN(azim)) {
+            plotarSatelite(azim, elev, snr, prn);
+          }
+        }
+      }
+    });
+  };
+  reader.readAsText(file);
+});
+
+// Desenha base
+desenharQuadrante();
+</script>
+
+</body>
+</html>
