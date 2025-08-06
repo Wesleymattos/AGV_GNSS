@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analisador NMEA</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 10px auto 20px;
+    }
+    .info {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #charts-container {
+      max-width: 950px;
+      margin: 0 auto;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .chart-wrapper {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      padding: 10px;
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      width: 400px !important;
+      height: 250px !important;
+    }
+    .zoom-buttons {
+      margin: 8px 0;
+    }
+    .zoom-buttons button {
+      margin: 0 5px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Analisador de Sentenças NMEA</h1>
+  <input type="file" id="fileInput" accept=".txt" />
+  <div class="info" id="info"></div>
+  <div id="charts-container">
+    <div class="chart-wrapper">
+      <canvas id="satChart"></canvas>
+      <div class="zoom-buttons">
+        <button id="zoomInSat">Zoom +</button>
+        <button id="zoomOutSat">Zoom -</button>
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="mapChart"></canvas>
+      <div class="zoom-buttons">
+        <button id="zoomInMap">Zoom +</button>
+        <button id="zoomOutMap">Zoom -</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let satChart, mapChart;
+    let mapCoords = [], mapLabels = [], satData = [];
+
+    // Zoom state
+    const zoomState = {
+      sat: { minX: null, maxX: null },
+      map: { minX: null, maxX: null, minY: null, maxY: null }
+    };
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const lines = e.target.result.split('\n');
+        processNMEA(lines);
+      };
+      reader.readAsText(file);
+    });
+
+    function processNMEA(lines) {
+      let satMin = Infinity, satMax = 0;
+      let speedMin = Infinity, speedMax = 0;
+      let startTime = null, endTime = null;
+
+      satData = [];
+      mapCoords = [];
+      mapLabels = [];
+
+      for (let line of lines) {
+        if (line.startsWith('$GPGGA')) {
+          const parts = line.split(',');
+          const time = parts[1];
+          const sats = parseInt(parts[7]);
+          const latRaw = parts[2];
+          const latDir = parts[3];
+          const lonRaw = parts[4];
+          const lonDir = parts[5];
+
+          if (!isNaN(sats)) {
+            satData.push(sats);
+            if (sats < satMin) satMin = sats;
+            if (sats > satMax) satMax = sats;
+          }
+
+          if (latRaw && lonRaw) {
+            const lat = convertToDecimal(latRaw, latDir);
+            const lon = convertToDecimal(lonRaw, lonDir);
+            mapCoords.push({ x: lon, y: lat }); // x=longitude, y=latitude for scatter plot
+            mapLabels.push(time);
+          }
+
+          if (!startTime) startTime = time;
+          endTime = time;
+        } else if (line.startsWith('$GPVTG')) {
+          const parts = line.split(',');
+          const speed = parseFloat(parts[7]);
+          if (!isNaN(speed)) {
+            if (speed < speedMin) speedMin = speed;
+            if (speed > speedMax) speedMax = speed;
+          }
+        }
+      }
+
+      const info = `
+        <p><strong>Satélites:</strong> Mínimo ${satMin}, Máximo ${satMax}</p>
+        <p><strong>Velocidade:</strong> Mínima ${speedMin.toFixed(2)} km/h, Máxima ${speedMax.toFixed(2)} km/h</p>
+        <p><strong>Início do teste:</strong> ${startTime}</p>
+        <p><strong>Fim do teste:</strong> ${endTime}</p>
+      `;
+      document.getElementById('info').innerHTML = info;
+
+      resetZoom();
+      renderCharts();
+    }
+
+    function renderCharts() {
+      if (satChart) satChart.destroy();
+      if (mapChart) mapChart.destroy();
+
+      const satCtx = document.getElementById('satChart').getContext('2d');
+      satChart = new Chart(satCtx, {
+        type: 'line',
+        data: {
+          labels: mapLabels,
+          datasets: [{
+            label: 'Satélites',
+            data: satData,
+            borderColor: 'blue',
+            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+            fill: false,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            hoverBorderWidth: 2,
+            hitRadius: 10, // aumenta a área de hover para facilitar clique
+          }]
+        },
+        options: {
+          responsive: false,
+          interaction: {
+            mode: 'nearest',
+            intersect: false,  // não precisa estar exatamente sobre o ponto
+          },
+          plugins: {
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: ctx => `Satélites: ${ctx.parsed.y}`
+              }
+            }
+          },
+          onHover: (evt, elements) => {
+            if (elements.length) {
+              const idx = elements[0].index;
+              syncHover(idx, 'sat');
+            } else {
+              syncHover(null);
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Tempo (hhmmss)' },
+              min: zoomState.sat.minX,
+              max: zoomState.sat.maxX,
+            },
+            y: { title: { display: true, text: 'Número de Satélites' }, min: 0 }
+          }
+        }
+      });
+
+      const mapCtx = document.getElementById('mapChart').getContext('2d');
+      mapChart = new Chart(mapCtx, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'Rota',
+            data: mapCoords,
+            borderColor: 'green',
+            backgroundColor: 'lime',
+            showLine: true,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            hoverBorderWidth: 2,
+            hitRadius: 10,
+          }]
+        },
+        options: {
+          responsive: false,
+          interaction: {
+            mode: 'nearest',
+            intersect: false,
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => `Lat: ${ctx.parsed.y.toFixed(6)}, Lon: ${ctx.parsed.x.toFixed(6)}`
+              }
+            }
+          },
+          onHover: (evt, elements) => {
+            if (elements.length) {
+              const idx = elements[0].index;
+              syncHover(idx, 'map');
+            } else {
+              syncHover(null);
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Longitude' },
+              min: zoomState.map.minX,
+              max: zoomState.map.maxX,
+            },
+            y: {
+              title: { display: true, text: 'Latitude' },
+              min: zoomState.map.minY,
+              max: zoomState.map.maxY,
+            }
+          }
+        }
+      });
+    }
+
+    function syncHover(index, source) {
+      if (index === null) {
+        satChart.setActiveElements([]);
+        satChart.tooltip.setActiveElements([], {x:0,y:0});
+        satChart.update();
+
+        mapChart.setActiveElements([]);
+        mapChart.tooltip.setActiveElements([], {x:0,y:0});
+        mapChart.update();
+        return;
+      }
+
+      if (source !== 'sat') {
+        satChart.setActiveElements([{datasetIndex: 0, index}]);
+        satChart.tooltip.setActiveElements([{datasetIndex: 0, index}], {x:0, y:0});
+        satChart.update();
+      }
+      if (source !== 'map') {
+        mapChart.setActiveElements([{datasetIndex: 0, index}]);
+        mapChart.tooltip.setActiveElements([{datasetIndex: 0, index}], {x:0, y:0});
+        mapChart.update();
+      }
+    }
+
+    function convertToDecimal(raw, dir) {
+      if (!raw) return 0;
+      const degLength = (dir === 'N' || dir === 'S') ? 2 : 3;
+      const deg = parseInt(raw.slice(0, degLength));
+      const min = parseFloat(raw.slice(degLength));
+      let dec = deg + min / 60;
+      if (dir === 'S' || dir === 'W') dec *= -1;
+      return dec;
+    }
+
+    // Zoom control functions
+    function resetZoom() {
+      zoomState.sat.minX = null;
+      zoomState.sat.maxX = null;
+      zoomState.map.minX = null;
+      zoomState.map.maxX = null;
+      zoomState.map.minY = null;
+      zoomState.map.maxY = null;
+    }
+
+    function zoomChart(chart, axis, factor) {
+      const scale = chart.scales[axis];
+      if (!scale) return;
+
+      const range = scale.max - scale.min;
+      const mid = (scale.max + scale.min) / 2;
+      const newRange = range * factor;
+
+      let newMin = mid - newRange / 2;
+      let newMax = mid + newRange / 2;
+
+      // Limita para não sair dos dados
+      if (newMin < scale.min) newMin = scale.min;
+      if (newMax > scale.max) newMax = scale.max;
+
+      if (chart === satChart) {
+        if (axis === 'x') {
+          zoomState.sat.minX = newMin;
+          zoomState.sat.maxX = newMax;
+        }
+      } else if (chart === mapChart) {
+        if (axis === 'x') {
+          zoomState.map.minX = newMin;
+          zoomState.map.maxX = newMax;
+        } else if (axis === 'y') {
+          zoomState.map.minY = newMin;
+          zoomState.map.maxY = newMax;
+        }
+      }
+
+      chart.options.scales[axis].min = newMin;
+      chart.options.scales[axis].max = newMax;
+      chart.update();
+    }
+
+    document.getElementById('zoomInSat').addEventListener('click', () => {
+      zoomChart(satChart, 'x', 0.5);
+    });
+    document.getElementById('zoomOutSat').addEventListener('click', () => {
+      zoomChart(satChart, 'x', 2);
+    });
+    document.getElementById('zoomInMap').addEventListener('click', () => {
+      zoomChart(mapChart, 'x', 0.5);
+      zoomChart(mapChart, 'y', 0.5);
+    });
+    document.getElementById('zoomOutMap').addEventListener('click', () => {
+      zoomChart(mapChart, 'x', 2);
+      zoomChart(mapChart, 'y', 2);
+    });
+  </script>
+</body>
+</html>

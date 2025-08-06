@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Plotter GNSS com 2 Referências KML e 2 Receptores</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0; padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #fff;
+    }
+    #chartContainer {
+      max-width: 95vw;
+      margin: 20px auto;
+    }
+    #controls {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    button {
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Plotter com 2 Referências (KML) + 2 Receptores</h1>
+
+<div id="controls">
+  <button onclick="selecionarReferencias()">Definir Referências (2 KML)</button>
+  <input type="file" id="refFile1" accept=".kml" style="display:none">
+  <input type="file" id="refFile2" accept=".kml" style="display:none">
+</div>
+
+<div id="chartContainer">
+  <canvas id="latLonChart" height="500"></canvas>
+</div>
+
+<script>
+  // --- Configuração Firebase ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
+    authDomain: "log--analyzer-web.firebaseapp.com",
+    databaseURL: "https://log--analyzer-web-default-rtdb.firebaseio.com",
+    projectId: "log--analyzer-web",
+    storageBucket: "log--analyzer-web.appspot.com",
+    messagingSenderId: "908592112855",
+    appId: "1:908592112855:web:ae60fc51e47a66390f3c92"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // --- Converte NMEA para decimal ---
+  function nmeaToDecimal(coord, direction) {
+    if (!coord || coord.length < 4) return null;
+    const degLength = (direction === 'N' || direction === 'S') ? 2 : 3;
+    const degrees = parseInt(coord.substring(0, degLength));
+    const minutes = parseFloat(coord.substring(degLength));
+    let dec = degrees + minutes / 60;
+    if (direction === 'S' || direction === 'W') dec *= -1;
+    return dec;
+  }
+
+  // --- Dados globais ---
+  let pathRealtime1 = [];
+  let pathRealtime2 = [];
+  let pathRef1 = [];
+  let pathRef2 = [];
+
+  // --- Configura Chart.js ---
+  const ctx = document.getElementById('latLonChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Referência 1 (Branco)',
+          data: [],
+          borderColor: '#fff',
+          backgroundColor: '#fff',
+          showLine: true,
+          fill: false,
+          pointRadius: 1,
+          tension: 0,
+          borderWidth: 2
+        },
+        {
+          label: 'Referência 2 (Amarelo)',
+          data: [],
+          borderColor: 'yellow',
+          backgroundColor: 'yellow',
+          showLine: true,
+          fill: false,
+          pointRadius: 1,
+          tension: 0,
+          borderWidth: 2
+        },
+        {
+          label: 'Receptor 1 (Vermelho)',
+          data: [],
+          borderColor: 'red',
+          backgroundColor: 'red',
+          showLine: true,
+          fill: false,
+          pointRadius: 2,
+          tension: 0,
+          borderWidth: 2
+        },
+        {
+          label: 'Receptor 2 (Azul)',
+          data: [],
+          borderColor: 'blue',
+          backgroundColor: 'blue',
+          showLine: true,
+          fill: false,
+          pointRadius: 2,
+          tension: 0,
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      plugins: {
+        legend: { labels: { color: '#fff' } }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: true, text: 'Longitude (°)', color: '#fff' },
+          ticks: { color: '#fff' }
+        },
+        y: {
+          title: { display: true, text: 'Latitude (°)', color: '#fff' },
+          ticks: { color: '#fff' }
+        }
+      }
+    }
+  });
+
+  // --- Atualiza gráfico ---
+  function atualizarGrafico() {
+    chart.data.datasets[0].data = pathRef1.map(p => ({x: p.lon, y: p.lat}));
+    chart.data.datasets[1].data = pathRef2.map(p => ({x: p.lon, y: p.lat}));
+    chart.data.datasets[2].data = pathRealtime1.map(p => ({x: p.lon, y: p.lat}));
+    chart.data.datasets[3].data = pathRealtime2.map(p => ({x: p.lon, y: p.lat}));
+    chart.update();
+  }
+
+  // --- Debug helper ---
+  function logDebugReceptor(num, raw, parts, lat, lon) {
+    console.log(`Receptor ${num} - RAW:`, raw);
+    console.log(`Receptor ${num} - Parts:`, parts);
+    console.log(`Receptor ${num} - Lat:`, lat, "Lon:", lon);
+  }
+
+  // --- Recebe dados em tempo real para receptor 1 ---
+  db.ref("gnss/raw").on("value", snap => {
+    const raw = snap.val();
+    if (!raw) return;
+    // Aceita qualquer linha que contenha $GPGGA, não só início
+    if (!raw.includes("$GPGGA")) return;
+
+    const parts = raw.split(",");
+    const lat = nmeaToDecimal(parts[2], parts[3]);
+    const lon = nmeaToDecimal(parts[4], parts[5]);
+
+    logDebugReceptor(1, raw, parts, lat, lon);
+
+    if (lat !== null && lon !== null) {
+      pathRealtime1.push({lat, lon});
+      if (pathRealtime1.length > 500) pathRealtime1.shift();
+      atualizarGrafico();
+    }
+  });
+
+  // --- Recebe dados em tempo real para receptor 2 ---
+  db.ref("gnss/raw2").on("value", snap => {
+    const raw = snap.val();
+    if (!raw) return;
+    if (!raw.includes("$GPGGA")) return;
+
+    const parts = raw.split(",");
+    const lat = nmeaToDecimal(parts[2], parts[3]);
+    const lon = nmeaToDecimal(parts[4], parts[5]);
+
+    logDebugReceptor(2, raw, parts, lat, lon);
+
+    if (lat !== null && lon !== null) {
+      pathRealtime2.push({lat, lon});
+      if (pathRealtime2.length > 500) pathRealtime2.shift();
+      atualizarGrafico();
+    }
+  });
+
+  // --- Seleção dos arquivos ---
+  function selecionarReferencias() {
+    document.getElementById('refFile1').value = null; // limpa seleção anterior
+    document.getElementById('refFile2').value = null;
+    document.getElementById('refFile1').click();
+  }
+
+  document.getElementById('refFile1').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    lerKML(file, pathRef1, () => {
+      document.getElementById('refFile2').click();
+    });
+  });
+
+  document.getElementById('refFile2').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    lerKML(file, pathRef2, atualizarGrafico);
+  });
+
+  // --- Função para ler KML ---
+  function lerKML(file, destino, callback) {
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const text = evt.target.result;
+      destino.length = 0;
+
+      const regex = /<coordinates>([\s\S]*?)<\/coordinates>/g;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        const coordsBlock = match[1].trim();
+        const coords = coordsBlock.split(/\s+/);
+        coords.forEach(c => {
+          const [lon, lat] = c.split(',').map(Number);
+          if (!isNaN(lat) && !isNaN(lon)) {
+            destino.push({lat, lon});
+          }
+        });
+      }
+
+      if (callback) callback();
+    };
+    reader.readAsText(file);
+  }
+</script>
+</body>
+</html>
