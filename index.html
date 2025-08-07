@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>Log remote web AGV</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -106,6 +108,54 @@ p {
     top: 2px;               /* desloca levemente para baixo */
   }
   
+
+  @media (max-width: 768px) {
+  body {
+    margin: 1rem;
+    max-width: 100%;
+  }
+
+  .map-container {
+    flex-direction: column; /* empilha os mapas verticalmente */
+  }
+
+  .map-box {
+    width: 100%;
+    margin-bottom: 20px;
+    border: 1px solid #1565c0;
+  }
+
+  .map {
+    height: 300px; /* reduz altura do mapa no mobile */
+  }
+
+  h1 {
+    font-size: 3em;
+    margin-top: 50px;
+  }
+
+  p, #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2,
+  #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2 {
+    font-size: 18px;
+  }
+
+  button {
+    width: 100%;
+    margin: 5px 0;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 18px;
+  }
+
+  iframe {
+    width: 100%;
+    height: 600px;
+  }
+}
+
 
     
   </style>
