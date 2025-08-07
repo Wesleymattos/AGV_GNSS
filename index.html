@@ -184,7 +184,7 @@ p {
 
  
  <iframe src="plot_lat_lon3.html" style="width:995px; height:1000px; border:none;"></iframe>  
-<iframe src="Parsing_quadrante_nemea2.html" style="width:1000px; height:1000px; border:none;"></iframe> 
+ <iframe src="Parsing_quadrante_nemea2.html" style="width:1000px; height:1000px; border:none;"></iframe> 
 
 
 
@@ -332,7 +332,8 @@ p {
       if (!raw) return;
       document.getElementById("raw").textContent = raw;
       appendToTerminal(terminal, raw);
-      if (isLogging && !isPaused) logLines.push(`[${new Date().toISOString()}] ${raw}`);
+      if (isLogging && !isPaused) logLines.push(raw);
+
       if (raw.startsWith("$GPGGA")) {
         const data = parseGGA(raw);
         if (data) {
@@ -361,7 +362,8 @@ p {
       if (!raw) return;
       document.getElementById("raw2").textContent = raw;
       appendToTerminal(terminal2, raw);
-      if (isLogging2 && !isPaused2) logLines2.push(`[${new Date().toISOString()}] ${raw}`);
+      if (isLogging2 && !isPaused2) logLines2.push(raw);
+
       if (raw.startsWith("$GPGGA")) {
         const data = parseGGA(raw);
         if (data) {
@@ -419,4 +421,3 @@ db.ref("receiver/receiver2").on("value", snapshot => {
   </script>
 </body>
 </html>
-
