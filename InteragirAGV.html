@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Controle AGV</title>
+
+  <!-- Importação correta do Firebase App e Realtime Database -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #1565c0;
+    }
+
+    .device {
+      margin: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #1e88e5, #42a5f5);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #1565c0, #1e88e5);
+      transform: translateY(-2px);
+    }
+
+    .status {
+      font-weight: bold;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dispositivos AGV</h1>
+
+  <div id="controls"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
+      authDomain: "log--analyzer-web.firebaseapp.com",
+      databaseURL: "https://log--analyzer-web-default-rtdb.firebaseio.com",
+      projectId: "log--analyzer-web",
+      storageBucket: "log--analyzer-web.appspot.com",
+      messagingSenderId: "908592112855",
+      appId: "1:908592112855:web:ae60fc51e47a66390f3c92"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const dispositivos = ["CH_GERAL", "NT03_1", "NT03_2", "R1", "R2", "R3", "DCAC"];
+    const controlsDiv = document.getElementById("controls");
+
+    dispositivos.forEach(nome => {
+      const container = document.createElement("div");
+      container.className = "device";
+
+      const btn = document.createElement("button");
+      btn.textContent = `Alternar ${nome}`;
+      btn.onclick = () => {
+        db.ref(`agv/${nome}`).once("value").then(snapshot => {
+          const atual = snapshot.val();
+          db.ref(`agv/${nome}`).set(!atual);
+        });
+      };
+
+      const status = document.createElement("span");
+      status.className = "status";
+      status.id = `status-${nome}`;
+      status.textContent = "Carregando...";
+
+      container.appendChild(btn);
+      container.appendChild(status);
+      controlsDiv.appendChild(container);
+
+      // Atualiza status em tempo real
+      db.ref(`agv/${nome}`).on("value", snapshot => {
+        const valor = snapshot.val();
+        status.textContent = valor ? "Ligado" : "Desligado";
+        status.style.color = valor ? "green" : "red";
+      });
+    });
+  </script>
+
+</body>
+</html>
