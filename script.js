@@ -1,0 +1,250 @@
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
+      authDomain: "log--analyzer-web.firebaseapp.com",
+      databaseURL: "https://log--analyzer-web-default-rtdb.firebaseio.com",
+      projectId: "log--analyzer-web",
+      storageBucket: "log--analyzer-web.appspot.com",
+      messagingSenderId: "908592112855",
+      appId: "1:908592112855:web:ae60fc51e47a66390f3c92"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+
+
+    function appendToTerminal(term, line) {
+      const timestamp = new Date().toLocaleTimeString();
+      if (term.textContent.includes("Aguardando")) term.textContent = "";
+      term.textContent += `[${timestamp}] ${line}\n`;
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function nmeaCoordToDecimal(coord, direction) {
+      if (!coord || coord.length < 4) return null;
+      let degLength = (direction === 'N' || direction === 'S') ? 2 : 3;
+      let degrees = parseInt(coord.substring(0, degLength));
+      let minutes = parseFloat(coord.substring(degLength));
+      let dec = degrees + minutes / 60;
+      if (direction === 'S' || direction === 'W') dec = -dec;
+      return dec.toFixed(6);
+    }
+
+    function parseGGA(sentence) {
+      const parts = sentence.split(',');
+      if (parts.length < 10) return null;
+      const lat = nmeaCoordToDecimal(parts[2], parts[3]);
+      const lon = nmeaCoordToDecimal(parts[4], parts[5]);
+      const sats = parseInt(parts[7]) || 0;
+      return { lat, lon, sats };
+    }
+
+    function parseVTG(sentence) {
+      const parts = sentence.split(',');
+      if (parts.length < 9) return null;
+      return {
+        heading: parts[1],
+        speed: (parseFloat(parts[7]) || 0).toFixed(1),
+        date: new Date().toISOString().slice(0, 10)
+      };
+    }
+
+// Define um novo ícone
+const gpsIcon = L.icon({
+  iconUrl: 'gps-icon.png', // Caminho para sua imagem
+  iconSize: [32, 32],      // Tamanho do ícone
+  iconAnchor: [16, 32],    // Ponto do ícone que será ancorado à coordenada
+  popupAnchor: [0, -32]    // Ponto de onde o popup será exibido
+});
+
+    let map1 = L.map('map1').setView([-30, -51], 19);
+    let map2 = L.map('map2').setView([-30, -51], 19);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map1);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map2);
+
+// Usa o novo ícone no marcador
+let marker1 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map1);
+let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
+    let path1 = [], path2 = [];
+    let polyline1 = L.polyline([], { color: 'red' }).addTo(map1);
+    let polyline2 = L.polyline([], { color: 'blue' }).addTo(map2);
+
+    function clearPath(path, polyline) {
+      path.length = 0;
+      polyline.setLatLngs([]);
+    }
+
+    function downloadKML(path, filename) {
+      if (!path.length) return;
+      let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<Placemark><LineString><coordinates>` +
+        path.map(p => `${p[1]},${p[0]},0`).join(' ') +
+        `</coordinates></LineString></Placemark></Document></kml>`;
+      const blob = new Blob([kml], { type: "application/vnd.google-earth.kml+xml" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+
+    const terminal = document.getElementById("terminal");
+    const terminal2 = document.getElementById("terminal2");
+
+    let isLogging = false, isPaused = false, logLines = [];
+    document.getElementById("startBtn").onclick = () => {
+      isLogging = true;
+      isPaused = false;
+      logLines = [];
+      appendToTerminal(terminal, ">>> LOG INICIADO");
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("pauseBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = false;
+    };
+    document.getElementById("pauseBtn").onclick = () => {
+      isPaused = !isPaused;
+      document.getElementById("pauseBtn").textContent = isPaused ? "Retomar Log" : "Pausar Log";
+      appendToTerminal(terminal, isPaused ? ">>> LOG PAUSADO" : ">>> LOG RETOMADO");
+    };
+    document.getElementById("stopBtn").onclick = () => {
+      isLogging = false;
+      isPaused = false;
+      appendToTerminal(terminal, ">>> LOG PARADO");
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("pauseBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = true;
+      const blob = new Blob([logLines.join('\n')], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `log_antena1_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+      a.click();
+    };
+
+    let isLogging2 = false, isPaused2 = false, logLines2 = [];
+    document.getElementById("startBtn2").onclick = () => {
+      isLogging2 = true;
+      isPaused2 = false;
+      logLines2 = [];
+      appendToTerminal(terminal2, ">>> LOG 2 INICIADO");
+      document.getElementById("startBtn2").disabled = true;
+      document.getElementById("pauseBtn2").disabled = false;
+      document.getElementById("stopBtn2").disabled = false;
+    };
+    document.getElementById("pauseBtn2").onclick = () => {
+      isPaused2 = !isPaused2;
+      document.getElementById("pauseBtn2").textContent = isPaused2 ? "Retomar Log 2" : "Pausar Log 2";
+      appendToTerminal(terminal2, isPaused2 ? ">>> LOG 2 PAUSADO" : ">>> LOG 2 RETOMADO");
+    };
+    document.getElementById("stopBtn2").onclick = () => {
+      isLogging2 = false;
+      isPaused2 = false;
+      appendToTerminal(terminal2, ">>> LOG 2 PARADO");
+      document.getElementById("startBtn2").disabled = false;
+      document.getElementById("pauseBtn2").disabled = true;
+      document.getElementById("stopBtn2").disabled = true;
+      const blob = new Blob([logLines2.join('\n')], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `log_antena2_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+      a.click();
+    };
+
+    db.ref("gnss/raw").on("value", snap => {
+      const raw = snap.val();
+      if (!raw) return;
+      document.getElementById("raw").textContent = raw;
+      appendToTerminal(terminal, raw);
+      if (isLogging && !isPaused) logLines.push(raw);
+
+      if (raw.startsWith("$GPGGA")) {
+        const data = parseGGA(raw);
+        if (data) {
+          document.getElementById("lat_rmc").textContent = data.lat;
+          document.getElementById("lon_rmc").textContent = data.lon;
+          document.getElementById("sats").textContent = data.sats;
+          marker1.setLatLng([+data.lat, +data.lon]);
+          map1.panTo([+data.lat, +data.lon]);
+          map2.panTo([+data.lat, +data.lon]);
+
+          path1.push([+data.lat, +data.lon]);
+          polyline1.setLatLngs(path1);
+        }
+      } else if (raw.startsWith("$GPVTG")) {
+        const vtg = parseVTG(raw);
+        if (vtg) {
+          document.getElementById("speed").textContent = vtg.speed;
+          document.getElementById("heading").textContent = vtg.heading;
+          document.getElementById("date").textContent = vtg.date;
+        }
+      }
+    });
+
+    db.ref("gnss/raw2").on("value", snap => {
+      const raw = snap.val();
+      if (!raw) return;
+      document.getElementById("raw2").textContent = raw;
+      appendToTerminal(terminal2, raw);
+      if (isLogging2 && !isPaused2) logLines2.push(raw);
+
+      if (raw.startsWith("$GPGGA")) {
+        const data = parseGGA(raw);
+        if (data) {
+          document.getElementById("lat_rmc2").textContent = data.lat;
+          document.getElementById("lon_rmc2").textContent = data.lon;
+          document.getElementById("sats2").textContent = data.sats;
+          marker2.setLatLng([+data.lat, +data.lon]);
+          map2.panTo([+data.lat, +data.lon]);
+
+          path2.push([+data.lat, +data.lon]);
+          polyline2.setLatLngs(path2);
+        }
+      } else if (raw.startsWith("$GPVTG")) {
+        const vtg = parseVTG(raw);
+        if (vtg) {
+          document.getElementById("speed2").textContent = vtg.speed;
+          document.getElementById("heading2").textContent = vtg.heading;
+          document.getElementById("date2").textContent = vtg.date;
+        }
+      }
+    });
+
+    // Atualiza o título enquanto digita
+// Atualiza título e envia para o banco
+document.getElementById('input1').addEventListener('input', function () {
+  const value = this.value.trim();
+  document.getElementById('title1').textContent = value || 'Receiver 1';
+  db.ref("receiver/receiver1").set(value || 'Receiver 1');
+});
+
+document.getElementById('input2').addEventListener('input', function () {
+  const value = this.value.trim();
+  document.getElementById('title2').textContent = value || 'Receiver 2';
+  db.ref("receiver/receiver2").set(value || 'Receiver 2');
+});
+
+
+
+db.ref("receiver/receiver1").on("value", snapshot => {
+  const value = snapshot.val();
+  if (value !== null) {
+    document.getElementById("input1").value = value;
+    document.getElementById("title1").textContent = value;
+  }
+});
+
+db.ref("receiver/receiver2").on("value", snapshot => {
+  const value = snapshot.val();
+  if (value !== null) {
+    document.getElementById("input2").value = value;
+    document.getElementById("title2").textContent = value;
+  }
+});
+
+
+
+
+
+
+
+
+  

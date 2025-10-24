@@ -1,0 +1,171 @@
+
+     h1 { /* Isso aqui é o título que aparece para o cliente Log remote AGV*/
+      text-align: center;
+      color: rgb(23, 84, 189);
+      font-size: 5em;
+      margin-top: 100px;
+      /*text-shadow: 2px 2px 10px rgba(0, 255, 255, 0.7);*/
+      /*animation: glow 2s ease-in-out infinite alternate;*/
+        }
+      
+
+body {
+ 
+/*Aqui aparece o backround*/
+  background-image: url('backround2.jpg');
+  background-size: cover;         /* cobre toda a tela */
+  background-position: center;    /* centraliza a imagem */
+  background-repeat: no-repeat;   /* evita repetição */
+  
+    
+  font-family: Arial, sans-serif;
+  max-width: 2000px;
+  margin: 2rem auto;
+}
+
+
+
+    pre {
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    #terminal, #terminal2 { 
+      height: 400px;
+      font-size: large;
+      background: #000;
+      color: #0f0;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-y: visible;
+      font-family: monospace;
+      white-space: pre-wrap;
+      
+    }
+    .map-container {
+      display: flex;
+      gap: 0px;
+      margin-top: 1rem;
+    }
+    .map-box {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid blue;
+      border-radius: 10px;
+    }
+    .map {
+      height: 500px;
+    }
+    .controls {
+      margin-top: 1rem;
+    }
+button {
+  padding: 5px 8px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1e88e5, #42a5f5);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+}
+
+button:disabled {
+  background: #999;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+p {
+    font-size: 28px;
+    position: relative;
+    left: 10px;   /* desloca tudo para direita */
+    top: 10px;    /* desloca tudo para baixo */
+    margin: 10px 0;
+    color: blue;
+}
+
+
+  #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2, #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2 {
+    font-size: 24px;        /* aumenta o tamanho dos valores */
+    font-weight: bold;      /* deixa os valores mais destacados */
+    color: #1565c0;         /* cor do texto */
+    position: static;     /* permite reposicionar */
+    left: 20px;             /* desloca 20px à direita */
+    top: 2px;               /* desloca levemente para baixo */
+  }
+  
+
+  @media (max-width: 768px) {
+  body {
+    margin: 1rem;
+    max-width: 100%;
+  }
+
+  .map-container {
+    flex-direction: column; /* empilha os mapas verticalmente */
+  }
+
+  .map-box {
+    width: 100%;
+    margin-bottom: 20px;
+    border: 1px solid #1565c0;
+  }
+
+  .map {
+    height: 300px; /* reduz altura do mapa no mobile */
+  }
+
+  h1 {
+    font-size: 3em;
+    margin-top: 50px;
+  }
+
+  p, #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2,
+  #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2 {
+    font-size: 18px;
+  }
+
+  button {
+    width: 100%;
+    margin: 5px 0;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 18px;
+  }
+
+  iframe {
+    width: 100%;
+    height: 600px;
+  }
+  
+}
+
+.header-agv {
+  display: flex;
+  justify-content: space-between; /* título à esquerda, imagem à direita */
+  align-items: center;
+  padding: 0 600px;
+}
+
+.header-agv img {
+  width: 150px; /* ajuste conforme necessário */
+  height: auto;
+}
+
+
+    
+  
