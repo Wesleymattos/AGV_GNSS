@@ -1,0 +1,14 @@
+log com1 rxstatuseventa onchanged
+log com1 gpvtg ontime 0.5
+log com1 gpggalong ontime 0.5
+log com1 gpgsv ontime 0.5
+log terrastarautochanconfig
+log ggaqualitya
+log bestveltypea
+log dynamicsa
+log setionotypea
+log pdpmodea
+log pdpfiltera
+log ppscontrola
+log versiona
+log hwconfigtablerawa
