@@ -1,4 +1,7 @@
 # AGV_GNSS
+Data da ultima atualização: 30/10/2025
+autor: Wesley de Mattos
+
 
 Sistemas remoto para coleta de dados em tempo real de receptores GNSS utilizando um AGV!
 
