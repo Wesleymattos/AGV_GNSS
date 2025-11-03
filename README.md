@@ -12,3 +12,4 @@ Neste projeto nós temos:
 4. Firmare em c para o Esp32 do sistema de relé do AGV.
 5. Firmware em c para o Esp32 do sistema opcional onde o Esp32 faz a leitura dos receptores (descontinuado, pois foi decidido fazer esse sistema diretamente no Raspberry).
 6. Software APK do aplicativo desenvolvido para Android baseado em web, permitindo a possibilidade de acessar pelo celular
+7. Pasta com os projetos Android do aplicativo android 
