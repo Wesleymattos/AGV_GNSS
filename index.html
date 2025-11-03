@@ -58,6 +58,15 @@
       <p><b>Data:</b> <span id="date">—</span></p>
       <p><b>Satélites 🛰️:</b> <span id="sats">—</span></p>
       <p><b>Tensão bateria AGV:</b> <span id="voltage">—</span></p>
+      <p><b>Sensor frontal AGV</b> <span id="SensorFront">—</span></p>
+
+      <div style="margin-top: 30px; text-align: center;">
+  <h2>Enviar Comando para o Receptor</h2>
+  <input type="text" id="comandoInput" placeholder="Digite um comando..." style="width: 400px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" />
+  <button onclick="enviarComando()" style="padding: 10px 20px; margin-left: 10px;">Enviar</button>
+  <p id="statusEnvio" style="margin-top: 10px; font-weight: bold;"></p>
+      </div>
+
 
       <pre id="raw">—</pre>
       <pre id="terminal">Aguardando dados...</pre>
@@ -85,6 +94,14 @@
       <p><b>Data:</b> <span id="date2">—</span></p>
       <p><b>Satélites 🛰️:</b> <span id="sats2">—</span></p>
       <p><b>Tensão bateria AGV:</b> <span id="voltage">—</span></p>
+      <p><b>Sensor frontal AGV</b> <span id="SensorFront2">—</span></p> 
+
+    <div style="margin-top: 30px; text-align: center;">
+    <h2>Enviar Comando para o Receptor</h2>
+    <input type="text" id="comandoInput2" placeholder="Digite um comando..." style="width: 400px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" />
+    <button onclick="enviarComando2()" style="padding: 10px 20px; margin-left: 10px;">Enviar</button>
+    <p id="statusEnvio2" style="margin-top: 10px; font-weight: bold;"></p>
+    </div>
       
       <pre id="raw2">—</pre>
       <pre id="terminal2">Aguardando dados...</pre>
@@ -115,6 +132,54 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+
+    function enviarComando() {
+  const comando = document.getElementById("comandoInput").value;
+  const status = document.getElementById("statusEnvio");
+
+  if (comando.trim() === "") {
+    status.textContent = "Por favor, digite um comando.";
+    status.style.color = "red";
+    return;
+  }
+
+  db.ref("receiver/comando").set(comando)
+    .then(() => {
+      status.textContent = "Comando enviado!";
+      status.style.color = "green";
+      document.getElementById("comandoInput").value = "";
+    })
+    .catch(error => {
+      status.textContent = "Erro ao enviar comando: " + error.message;
+      status.style.color = "red";
+    });
+}
+
+function enviarComando2() {
+  const comando = document.getElementById("comandoInput2").value;
+  const status = document.getElementById("statusEnvio2");
+
+  if (comando.trim() === "") {
+    status.textContent = "Por favor, digite um comando.";
+    status.style.color = "red";
+    return;
+  }
+
+  db.ref("receiver/comando2").set(comando)
+    .then(() => {
+      status.textContent = "Comando enviado!!";
+      status.style.color = "green";
+      document.getElementById("comandoInput2").value = "";
+    })
+    .catch(error => {
+      status.textContent = "Erro ao enviar comando 2: " + error.message;
+      status.style.color = "red";
+    });
+}
+``
+
+
 
     function appendToTerminal(term, line) {
       const timestamp = new Date().toLocaleTimeString();
@@ -346,5 +411,7 @@ db.ref("receiver/receiver2").on("value", snapshot => {
 
     <script src="script.js"></script> 
 </body>
+
+
 
 </html>
