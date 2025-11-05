@@ -1,6 +1,9 @@
 # AGV_GNSS
-Data da ultima atualização: 30/10/2025
+Data da ultima atualização: 05/11/2025
 autor: Wesley de Mattos
+Versão: 1.0.0
+
+observação: A apartir do dia 05/11/2025 o Log Remote Agv ganhou sua primeira versão oficial 1.0.0
 
 
 Sistemas remoto para coleta de dados em tempo real de receptores GNSS utilizando um AGV!
