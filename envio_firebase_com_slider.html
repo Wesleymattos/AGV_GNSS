@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -21,13 +20,26 @@
   <input type="range" id="speedSlider" min="1" max="1000" value="10" step="1" oninput="updateSpeedLabel(this.value)">
   <span id="speedValue">10</span> ms<br><br>
 
+  <label for="nmeaFilter">Filtro NMEA:</label>
+  <select id="nmeaFilter">
+    <option value="ALL">Sem filtro</option>
+    <option value="ANY">Mostrar todas sentenças (aceitar todas sentenças)</option>
+    <option value="$GPGGA">$GPGGA</option>
+    <option value="$GPRMC">$GPRMC</option>
+    <option value="$GPVTG">$GPVTG</option>
+    <option value="$GPGSA">$GPGSA</option>
+    <option value="$GPGSV">$GPGSV</option>
+    <option value="$GPGST">$GPGST</option>
+    <option value="$GPTXT">$GPTXT</option>
+    <option value="$GPZDA">$GPZDA</option>
+  </select><br><br>
+
   <button onclick="play()">▶️ Play</button>
   <button onclick="pause()">⏸️ Pause</button><br><br>
 
   <div id="status">Aguardando arquivos...</div>
 
   <script>
-    // Configuração do Firebase
     var firebaseConfig = {
       apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
       authDomain: "log--analyzer-web.firebaseapp.com",
@@ -74,6 +86,12 @@
       reader.readAsText(file);
     });
 
+    function aplicaFiltro(linha, filtro) {
+      if (filtro === "ALL") return true;
+      if (filtro === "ANY") return linha.startsWith("$");
+      return linha.startsWith(filtro);
+    }
+
     function play() {
       if (linhas1.length === 0 || linhas2.length === 0) {
         alert("Selecione os dois arquivos primeiro.");
@@ -84,16 +102,17 @@
       index = 0;
 
       const totalLinhas = Math.max(linhas1.length, linhas2.length);
+      const filtro = document.getElementById("nmeaFilter").value;
 
       intervalo = setInterval(() => {
         if (index < totalLinhas && !isPaused) {
           const linha1 = linhas1[index] ? linhas1[index].trim() : "";
           const linha2 = linhas2[index] ? linhas2[index].trim() : "";
 
-          if (linha1) {
+          if (linha1 && aplicaFiltro(linha1, filtro)) {
             db.ref("gnss").update({ raw: linha1 });
           }
-          if (linha2) {
+          if (linha2 && aplicaFiltro(linha2, filtro)) {
             db.ref("gnss").update({ raw2: linha2 });
           }
 
