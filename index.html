@@ -410,8 +410,14 @@ db.ref("receiver/receiver2").on("value", snapshot => {
   </script>
 
     <script src="script.js"></script> 
+
+      <footer>
+    Desenvolvido por Wesley de Mattos — Versão 1.0.0 — <span id="ano"></span>
+  </footer>
+ 
+  <script>
+    // Pega o ano atual e insere no rodapé
+    document.getElementById("ano").textContent = new Date().getFullYear();
+  </script>
 </body>
-
-
-
 </html>
