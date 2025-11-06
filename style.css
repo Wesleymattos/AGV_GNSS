@@ -100,17 +100,24 @@ button:disabled {
   box-shadow: none;
 }
 
+
 p {
-    font-size: 28px;
-    position: relative;
-    left: 10px;   /* desloca tudo para direita */
-    top: 10px;    /* desloca tudo para baixo */
-    margin: 10px 0;
+    font-size: 29px; /* tamanho mais equilibrado */
+    margin: 6px 0;   /* espaçamento uniforme */
     color: blue;
 }
 
 
-  #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2, #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2 {
+.container {
+    position: relative;
+    left: 10px;
+    top: 10px;
+}
+
+
+
+
+  #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2, #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2, #hdop, #hdop1 {
     font-size: 24px;        /* aumenta o tamanho dos valores */
     font-weight: bold;      /* deixa os valores mais destacados */
     color: #1565c0;         /* cor do texto */

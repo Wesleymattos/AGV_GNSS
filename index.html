@@ -51,7 +51,7 @@
   <input type="text" id="input1" placeholder="Nome da Antena 1" style="margin-left: 10px;">
 </h2>
 
-
+      <div class="container">
       <p><b>Latitude:</b> <span id="lat_rmc">—</span></p>
       <p><b>Longitude:</b> <span id="lon_rmc">—</span></p>
       <p><b>Speed (km/h):</b> <span id="speed">—</span></p>
@@ -60,6 +60,9 @@
       <p><b>Satélites 🛰️:</b> <span id="sats">—</span></p>
       <p><b>Tensão bateria AGV:</b> <span id="voltage">—</span></p>
       <p><b>Sensor frontal AGV</b> <span id="SensorFront">—</span></p>
+      <p><b>Hdop:</b> <span id="hdop1">—</span></p>
+      </div>
+
 
       <div style="margin-top: 30px; text-align: center;">
   <h2>Enviar Comando para o Receptor</h2>
@@ -87,7 +90,7 @@
   <input type="text" id="input2" placeholder="Nome da Antena 2" style="margin-left: 10px;">
 </h2>
 
-
+      <div class="container">
       <p><b>Latitude:</b> <span id="lat_rmc2">—</span></p>
       <p><b>Longitude:</b> <span id="lon_rmc2">—</span></p>
       <p><b>Speed(km/h):</b> <span id="speed2">—</span></p>
@@ -96,6 +99,9 @@
       <p><b>Satélites 🛰️:</b> <span id="sats2">—</span></p>
       <p><b>Tensão bateria AGV:</b> <span id="voltage">—</span></p>
       <p><b>Sensor frontal AGV</b> <span id="SensorFront2">—</span></p> 
+      <p><b>Hdop:</b> <span id="hdop">—</span></p>
+      </div>
+      
 
     <div style="margin-top: 30px; text-align: center;">
     <h2>Enviar Comando para o Receptor</h2>
@@ -190,7 +196,7 @@ function enviarComando2() {
       status.style.color = "red";
     });
 }
-``
+
 
 
 
@@ -217,7 +223,8 @@ function enviarComando2() {
       const lat = nmeaCoordToDecimal(parts[2], parts[3]);
       const lon = nmeaCoordToDecimal(parts[4], parts[5]);
       const sats = parseInt(parts[7]) || 0;
-      return { lat, lon, sats };
+      const hdop = parseFloat(parts[8]) || 0; // <-- Adicionando HDOP
+      return { lat, lon, sats, hdop };
     }
 
     function parseVTG(sentence) {
@@ -342,6 +349,7 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("lat_rmc").textContent = data.lat;
           document.getElementById("lon_rmc").textContent = data.lon;
           document.getElementById("sats").textContent = data.sats;
+          document.getElementById("hdop1").textContent = data.hdop; // <-- Novo campo
           marker1.setLatLng([+data.lat, +data.lon]);
           map1.panTo([+data.lat, +data.lon]);
           map2.panTo([+data.lat, +data.lon]);
@@ -372,6 +380,7 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("lat_rmc2").textContent = data.lat;
           document.getElementById("lon_rmc2").textContent = data.lon;
           document.getElementById("sats2").textContent = data.sats;
+          document.getElementById("hdop").textContent = data.hdop; // <-- Novo campo
           marker2.setLatLng([+data.lat, +data.lon]);
           map2.panTo([+data.lat, +data.lon]);
 
