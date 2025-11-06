@@ -62,7 +62,12 @@
       <p><b>Pdop:</b> <span id="pdop1">—</span></p>
       <p><b>Hdop (GSA):</b> <span id="hdop_gsa1">—</span></p>
       <p><b>Vdop:</b> <span id="vdop1">—</span></p>
-
+      <p><b>RMS (erro total):</b> <span id="gst_rms">—</span></p>
+      <p><b>Sigma Latitude:</b> <span id="gst_sigma_lat">—</span></p>
+      <p><b>Sigma Longitude:</b> <span id="gst_sigma_lon">—</span></p>
+      <p><b>Erro Semi-eixo Maior:</b> <span id="gst_major">—</span></p>
+      <p><b>Erro Semi-eixo Menor:</b> <span id="gst_minor">—</span></p>
+      <p><b>Orientação da Elipse (°):</b> <span id="gst_orientation">—</span></p>
       </div>
 
 
@@ -96,13 +101,19 @@
       <p><b>Latitude:</b> <span id="lat_rmc2">—</span></p>
       <p><b>Longitude:</b> <span id="lon_rmc2">—</span></p>
       <p><b>Speed(km/h):</b> <span id="speed2">—</span></p>
-      <p><b>Direção(°):</b> <span id="heading2">—</span></p>
+      <p><b>Direção (°):</b> <span id="heading2">—</span></p>
       <p><b>Data:</b> <span id="date2">—</span></p>
       <p><b>Satélites 🛰️:</b> <span id="sats2">—</span></p>
       <p><b>Hdop:</b> <span id="hdop">—</span></p>
       <p><b>Pdop:</b> <span id="pdop">—</span></p>
       <p><b>Hdop (GSA):</b> <span id="hdop_gsa">—</span></p>
       <p><b>Vdop:</b> <span id="vdop">—</span></p>
+      <p><b>RMS (erro total):</b> <span id="gst_rms2">—</span></p>
+      <p><b>Sigma Latitude:</b> <span id="gst_sigma_lat2">—</span></p>
+      <p><b>Sigma Longitude:</b> <span id="gst_sigma_lon2">—</span></p>
+      <p><b>Erro Semi-eixo Maior:</b> <span id="gst_major2">—</span></p>
+      <p><b>Erro Semi-eixo Menor:</b> <span id="gst_minor2">—</span></p>
+      <p><b>Orientação da Elipse (°):</b> <span id="gst_orientation2">—</span></p>
       </div>
       
 
@@ -262,6 +273,31 @@ function enviarComando2() {
   };
 }
 
+function parseGST(sentence) {
+  const parts = sentence.split(',');
+  if (parts.length < 9) return null;
+
+  const utcTime = parts[1];
+  const rms = parseFloat(parts[2]) || 0;
+  const sigmaLat = parseFloat(parts[3]) || 0;
+  const sigmaLon = parseFloat(parts[4]) || 0;
+  const sigmaMajor = parseFloat(parts[5]) || 0;
+  const sigmaMinor = parseFloat(parts[6]) || 0;
+  const orientation = parseFloat(parts[7]) || 0;
+  const extra = parseFloat(parts[8]) || 0; // Campo adicional (0.06 no seu exemplo)
+
+  return {
+    utcTime,
+    rms,
+    sigmaLat,
+    sigmaLon,
+    sigmaMajor,
+    sigmaMinor,
+    orientation,
+    extra // opcional, pode ser ignorado se não for necessário
+  };
+}
+
 // Define um novo ícone
 const gpsIcon = L.icon({
   iconUrl: 'gps-icon.png', // Caminho para sua imagem
@@ -404,6 +440,19 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
         }
       }
 
+      else if (raw.startsWith("$GPGST")) {
+      const gst = parseGST(raw);
+      if (gst) {
+      document.getElementById("gst_rms").textContent = gst.rms.toFixed(2);
+      document.getElementById("gst_sigma_lat").textContent = gst.sigmaLat.toFixed(2);
+      document.getElementById("gst_sigma_lon").textContent = gst.sigmaLon.toFixed(2);
+      document.getElementById("gst_major").textContent = gst.sigmaMajor.toFixed(2);
+      document.getElementById("gst_minor").textContent = gst.sigmaMinor.toFixed(2);
+      document.getElementById("gst_orientation").textContent = gst.orientation.toFixed(1);
+        }
+      }
+
+
     });
 
     db.ref("gnss/raw2").on("value", snap => {
@@ -441,6 +490,18 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("hdop_gsa").textContent = gsa.hdop;
           document.getElementById("vdop").textContent = gsa.vdop;
           document.getElementById("fixType").textContent = gsa.fixType === 3 ? "3D" : gsa.fixType === 2 ? "2D" : "Sem fix";
+        }
+      }
+
+            else if (raw.startsWith("$GPGST")) {
+      const gst = parseGST(raw);
+      if (gst) {
+      document.getElementById("gst_rms2").textContent = gst.rms.toFixed(2);
+      document.getElementById("gst_sigma_lat2").textContent = gst.sigmaLat.toFixed(2);
+      document.getElementById("gst_sigma_lon2").textContent = gst.sigmaLon.toFixed(2);
+      document.getElementById("gst_major2").textContent = gst.sigmaMajor.toFixed(2);
+      document.getElementById("gst_minor2").textContent = gst.sigmaMinor.toFixed(2);
+      document.getElementById("gst_orientation2").textContent = gst.orientation.toFixed(1);
         }
       }
     });
@@ -607,7 +668,7 @@ function clearCombinedPaths() {
     <script src="script.js"></script> 
 
       <footer>
-    Desenvolvido por Wesley de Mattos — Versão 1.0.4 — <span id="ano"></span>
+    Desenvolvido por Wesley de Mattos — Versão 1.0.5 — <span id="ano"></span>
   </footer>
  
   <script>

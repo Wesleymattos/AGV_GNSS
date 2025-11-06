@@ -152,9 +152,42 @@ p {
     margin-top: 50px;
   }
 
-  p, #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2, #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2, #pdop1, #hdop_gsa1, #vdop1, #fixType1, #pdop, #hdop_gsa, #vdop, #fixType {
-    font-size: 18px;
-  }
+p,
+#lat_rmc,
+#lat_rmc2,
+#lon_rmc,
+#lon_rmc2,
+#speed,
+#speed2,
+#heading,
+#heading2,
+#date,
+#date2,
+#sats,
+#sats2,
+#pdop1,
+#hdop_gsa1,
+#vdop1,
+#fixType1,
+#pdop,
+#hdop_gsa,
+#vdop,
+#fixType,
+#gst_rms,
+#gst_sigma_lat,
+#gst_sigma_lon,
+#gst_major,
+#gst_minor,
+#gst_orientation,
+#gst_rms2,
+#gst_sigma_lat2,
+#gst_sigma_lon2,
+#gst_major2,
+#gst_minor2,
+#gst_orientation2 {
+  font-size: 18px;
+}
+
 
   button {
     width: 100%;
