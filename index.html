@@ -45,6 +45,7 @@
 
   <div class="map-container">
     <div class="map-box">
+      
 <h2 style="color: red;">
   <span id="title1">Receiver 1</span>
   <input type="text" id="input1" placeholder="Nome da Antena 1" style="margin-left: 10px;">
@@ -115,6 +116,18 @@
       <div id="map2" class="map"></div>
     </div>
   </div>
+
+
+  <div class="map-box">
+  <h2 style="color: purple;">Comparação de Precisão (Mapa Combinado)</h2>
+  <p>Receiver 1 (vermelho) vs Receiver 2 (azul)</p>
+  <div id="mapComparado" class="map"></div>
+
+  <!-- Botões para o mapa comparado -->
+<div class="controls-compare" style="margin-top:10px;">
+    <button onclick="clearCombinedPaths()" style="padding:8px 12px; background:#ff4d4f; border:none; color:#fff;">Limpar Linhas Combinadas</button>
+</div>
+</div>
 
 <!-- <iframe src="plot_lat_lon3.html" style="width:995px; height:1000px; border:none;"></iframe> -->
 <!-- <iframe src="Parsing_quadrante_nemea2.html" style="width:1000px; height:1000px; border:none;"></iframe> -->
@@ -404,6 +417,84 @@ db.ref("receiver/receiver2").on("value", snapshot => {
     document.getElementById("title2").textContent = value;
   }
 });
+
+// ====== Mapa combinado para comparação ======
+let mapComparado = L.map('mapComparado').setView([-30, -51], 19);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 35
+}).addTo(mapComparado);
+
+// Marcadores combinados com ícones diferentes
+const icon1 = L.icon({
+  iconUrl: 'gps-icon.png',
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+});
+
+const icon2 = L.icon({
+  iconUrl: 'gps-icon.png',
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+  className: 'icon-blue'
+});
+
+let markerComp1 = L.marker([-30, -51], { icon: icon1 }).addTo(mapComparado);
+let markerComp2 = L.marker([-30, -51], { icon: icon2 }).addTo(mapComparado);
+
+let polylineComp1 = L.polyline([], { color: 'red' }).addTo(mapComparado);
+let polylineComp2 = L.polyline([], { color: 'blue' }).addTo(mapComparado);
+
+let pathComp1 = [];
+let pathComp2 = [];
+
+// Atualiza o mapa combinado sempre que houver novas coordenadas
+function atualizarMapaComparado(lat1, lon1, lat2, lon2) {
+  if (lat1 && lon1) {
+    pathComp1.push([+lat1, +lon1]);
+    polylineComp1.setLatLngs(pathComp1);
+    markerComp1.setLatLng([+lat1, +lon1]);
+    mapComparado.panTo([+lat1, +lon1], { animate: true }); // mantém posição dinâmica sem perder zoom
+  }
+  if (lat2 && lon2) {
+    pathComp2.push([+lat2, +lon2]);
+    polylineComp2.setLatLngs(pathComp2);
+    markerComp2.setLatLng([+lat2, +lon2]);
+  }
+}
+
+// Sempre que Receiver 1 ou 2 atualizarem, reflete no mapa combinado
+db.ref("gnss/raw").on("value", snap => {
+  const raw = snap.val();
+  if (raw && raw.startsWith("$GPGGA")) {
+    const data = parseGGA(raw);
+    if (data) atualizarMapaComparado(data.lat, data.lon, null, null);
+  }
+});
+
+db.ref("gnss/raw2").on("value", snap => {
+  const raw = snap.val();
+  if (raw && raw.startsWith("$GPGGA")) {
+    const data = parseGGA(raw);
+    if (data) atualizarMapaComparado(null, null, data.lat, data.lon);
+  }
+});
+
+function clearCombinedPaths() {
+  pathComp1.length = 0;
+  pathComp2.length = 0;
+
+  polylineComp1.setLatLngs([]);
+  polylineComp2.setLatLngs([]);
+
+  const initialLat = -30.0, initialLon = -51.0;
+  markerComp1.setLatLng([initialLat, initialLon]);
+  markerComp2.setLatLng([initialLat, initialLon]);
+
+  mapComparado.setView([initialLat, initialLon], 19);
+
+  console.log("Linhas combinadas limpas.");
+}
 
 
 

@@ -23,6 +23,13 @@ body {
   margin: 2rem auto;
 }
 
+#mapComparado {
+  height: 400px;
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
     footer {
       text-align: center;
       color: #666;
