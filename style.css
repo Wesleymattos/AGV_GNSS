@@ -152,8 +152,7 @@ p {
     margin-top: 50px;
   }
 
-  p, #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2,
-  #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2 {
+  p, #lat_rmc, #lat_rmc2, #lon_rmc, #lon_rmc2, #speed, #speed2, #heading, #heading2, #date, #date2, #sats, #sats2, #pdop1, #hdop_gsa1, #vdop1, #fixType1, #pdop, #hdop_gsa, #vdop, #fixType {
     font-size: 18px;
   }
 

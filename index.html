@@ -58,9 +58,11 @@
       <p><b>Direção (°):</b> <span id="heading">—</span></p>
       <p><b>Data:</b> <span id="date">—</span></p>
       <p><b>Satélites 🛰️:</b> <span id="sats">—</span></p>
-      <p><b>Tensão bateria AGV:</b> <span id="voltage">—</span></p>
-      <p><b>Sensor frontal AGV</b> <span id="SensorFront">—</span></p>
       <p><b>Hdop:</b> <span id="hdop1">—</span></p>
+      <p><b>Pdop:</b> <span id="pdop1">—</span></p>
+      <p><b>Hdop (GSA):</b> <span id="hdop_gsa1">—</span></p>
+      <p><b>Vdop:</b> <span id="vdop1">—</span></p>
+
       </div>
 
 
@@ -97,9 +99,10 @@
       <p><b>Direção(°):</b> <span id="heading2">—</span></p>
       <p><b>Data:</b> <span id="date2">—</span></p>
       <p><b>Satélites 🛰️:</b> <span id="sats2">—</span></p>
-      <p><b>Tensão bateria AGV:</b> <span id="voltage">—</span></p>
-      <p><b>Sensor frontal AGV</b> <span id="SensorFront2">—</span></p> 
       <p><b>Hdop:</b> <span id="hdop">—</span></p>
+      <p><b>Pdop:</b> <span id="pdop">—</span></p>
+      <p><b>Hdop (GSA):</b> <span id="hdop_gsa">—</span></p>
+      <p><b>Vdop:</b> <span id="vdop">—</span></p>
       </div>
       
 
@@ -237,6 +240,28 @@ function enviarComando2() {
       };
     }
 
+
+    function parseGSA(sentence) {
+  const parts = sentence.split(',');
+  if (parts.length < 18) return null;
+
+  const mode = parts[1]; // A ou M
+  const fixType = parseInt(parts[2]) || 0; // 1, 2 ou 3
+  const satellites = parts.slice(3, 15).filter(s => s !== '');
+  const pdop = parseFloat(parts[15]) || 0;
+  const hdop = parseFloat(parts[16]) || 0;
+  const vdop = parseFloat(parts[17]) || 0;
+
+  return {
+    mode,
+    fixType,
+    satellites,
+    pdop,
+    hdop,
+    vdop
+  };
+}
+
 // Define um novo ícone
 const gpsIcon = L.icon({
   iconUrl: 'gps-icon.png', // Caminho para sua imagem
@@ -350,6 +375,8 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("lon_rmc").textContent = data.lon;
           document.getElementById("sats").textContent = data.sats;
           document.getElementById("hdop1").textContent = data.hdop; // <-- Novo campo
+
+
           marker1.setLatLng([+data.lat, +data.lon]);
           map1.panTo([+data.lat, +data.lon]);
           map2.panTo([+data.lat, +data.lon]);
@@ -357,7 +384,8 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           path1.push([+data.lat, +data.lon]);
           polyline1.setLatLngs(path1);
         }
-      } else if (raw.startsWith("$GPVTG")) {
+      }
+       else if (raw.startsWith("$GPVTG")) {
         const vtg = parseVTG(raw);
         if (vtg) {
           document.getElementById("speed").textContent = vtg.speed;
@@ -365,6 +393,17 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("date").textContent = vtg.date;
         }
       }
+      
+      else if (raw.startsWith("$GPGSA")) {
+      const gsa = parseGSA(raw);
+      if (gsa) {
+        document.getElementById("pdop1").textContent = gsa.pdop;
+        document.getElementById("hdop_gsa1").textContent = gsa.hdop;
+        document.getElementById("vdop1").textContent = gsa.vdop;
+        document.getElementById("fixType1").textContent = gsa.fixType === 3 ? "3D" : gsa.fixType === 2 ? "2D" : "Sem fix";
+        }
+      }
+
     });
 
     db.ref("gnss/raw2").on("value", snap => {
@@ -393,6 +432,15 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("speed2").textContent = vtg.speed;
           document.getElementById("heading2").textContent = vtg.heading;
           document.getElementById("date2").textContent = vtg.date;
+        }
+      }
+        else if (raw.startsWith("$GPGSA")) {
+        const gsa = parseGSA(raw);
+        if (gsa) {
+          document.getElementById("pdop").textContent = gsa.pdop;
+          document.getElementById("hdop_gsa").textContent = gsa.hdop;
+          document.getElementById("vdop").textContent = gsa.vdop;
+          document.getElementById("fixType").textContent = gsa.fixType === 3 ? "3D" : gsa.fixType === 2 ? "2D" : "Sem fix";
         }
       }
     });
