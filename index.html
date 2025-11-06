@@ -461,7 +461,54 @@ function atualizarMapaComparado(lat1, lon1, lat2, lon2) {
     polylineComp2.setLatLngs(pathComp2);
     markerComp2.setLatLng([+lat2, +lon2]);
   }
+
+  atualizarDiferenca();
 }
+
+// ====== Linha de diferença entre receptores ======
+let linhaDiferenca = L.polyline([], { color: 'gray', opacity: 0.4 }).addTo(mapComparado);
+
+let labelDistancia = L.marker([-30, -51], {
+  icon: L.divIcon({
+    className: '', // sem classe padrão pra evitar fundo branco
+    html: `<div style="color: white; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 14px;">
+             0.0 cm
+           </div>`
+  })
+}).addTo(mapComparado);
+
+
+function atualizarDiferenca() {
+  if (pathComp1.length > 0 && pathComp2.length > 0) {
+    const p1 = pathComp1[pathComp1.length - 1];
+    const p2 = pathComp2[pathComp2.length - 1];
+
+    // Atualiza a linha entre os dois receptores
+    linhaDiferenca.setLatLngs([p1, p2]);
+
+    // Calcula distância (metros → centímetros)
+    const distancia = mapComparado.distance(p1, p2) * 100;
+
+    // Calcula ponto médio e desloca levemente (offset)
+    let midLat = (p1[0] + p2[0]) / 2;
+    let midLon = (p1[1] + p2[1]) / 2;
+
+    // deslocamento em "graus" (pequeno, depende da escala do mapa)
+    const deslocamentoLat = (p2[0] - p1[0]) * 0.2; // ajuste: 0.2 = 20% mais à direita
+    const deslocamentoLon = (p2[1] - p1[1]) * 0.5;
+
+    midLat += deslocamentoLat;
+    midLon += deslocamentoLon;
+
+    // Atualiza posição e texto do rótulo
+    labelDistancia.setLatLng([midLat, midLon]);
+    labelDistancia._icon.innerHTML = `
+      <div style="color: black; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 14px;">
+        ${distancia.toFixed(1)} cm
+      </div>`;
+  }
+}
+
 
 // Sempre que Receiver 1 ou 2 atualizarem, reflete no mapa combinado
 db.ref("gnss/raw").on("value", snap => {
