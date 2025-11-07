@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Comparador de Sentenças NMEA</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; font-size: 20px; }
-  h2 { color: #2c3e50; font-size: 28px; }
-  h3 { font-size: 24px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 18px; }
-  th, td { border: 1px solid #ccc; padding: 12px; text-align: center; }
-  th { background-color: #f4f4f4; }
-  input, button { font-size: 18px; padding: 10px; margin: 5px 0; }
-</style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; font-size: 20px; }
+    h2 { color: #2c3e50; font-size: 28px; }
+    h3 { font-size: 24px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 18px; }
+    th, td { border: 1px solid #ccc; padding: 12px; text-align: center; }
+    th { background-color: #f4f4f4; }
+    input, button { font-size: 18px; padding: 10px; margin: 5px 0; }
+  </style>
 </head>
 <body>
   <h2>Comparador de Sentenças NMEA</h2>
@@ -19,6 +20,7 @@
   <input type="file" id="file2"> Arquivo 2<br><br>
   <button onclick="processFiles()">Comparar</button>
   <div id="output"></div>
+  <div id="charts" style="margin-top: 60px;"></div>
 
 <script>
 function readFile(file) {
@@ -82,6 +84,16 @@ function average(values) {
   return values.length ? sum / values.length : 0;
 }
 
+function formatValue(field, value) {
+  if (field === 'latitude' || field === 'longitude') {
+    return value.toFixed(6);
+  } else if (field === 'satellites') {
+    return Math.round(value);
+  } else {
+    return value.toFixed(2);
+  }
+}
+
 function processFiles() {
   const file1 = document.getElementById('file1').files[0];
   const file2 = document.getElementById('file2').files[0];
@@ -123,19 +135,7 @@ function processFiles() {
         const avg1 = average(values1.map(v => v[field]));
         const avg2 = average(values2.map(v => v[field]));
         const diff = Math.abs(avg1 - avg2);
-        html += `<tr><td>${field}</td><td>${
-          field === 'latitude' || field === 'longitude' ? avg1.toFixed(6) :
-          field === 'satellites' ? Math.round(avg1) :
-          avg1.toFixed(2)
-        }</td><td>${
-          field === 'latitude' || field === 'longitude' ? avg2.toFixed(6) :
-          field === 'satellites' ? Math.round(avg2) :
-          avg2.toFixed(2)
-        }</td><td>${
-          field === 'latitude' || field === 'longitude' ? diff.toFixed(6) :
-          field === 'satellites' ? Math.round(diff) :
-          diff.toFixed(2)
-        }</td></tr>`;
+        html += `<tr><td>${field}</td><td>${formatValue(field, avg1)}</td><td>${formatValue(field, avg2)}</td><td>${formatValue(field, diff)}</td></tr>`;
       });
       html += '</table>';
       output.innerHTML += html;
@@ -145,7 +145,81 @@ function processFiles() {
     renderTable('GPGSA', ['pdop', 'hdop', 'vdop'], data.GPGSA.file1, data.GPGSA.file2);
     renderTable('GPGST', ['rms', 'sigmaLat', 'sigmaLon', 'semiMajor', 'semiMinor', 'orientation'], data.GPGST.file1, data.GPGST.file2);
     renderTable('GPRMC', ['speed', 'direction', 'latitude', 'longitude'], data.GPRMC.file1, data.GPRMC.file2);
+
+    renderCharts(data);
   });
+}
+
+function renderCharts(data) {
+  const chartContainer = document.getElementById('charts');
+  chartContainer.innerHTML = '';
+
+  function createChart(title, labels, values1, values2, field) {
+    const canvas = document.createElement('canvas');
+    const div = document.createElement('div');
+    div.style.marginTop = '40px';
+    const heading = document.createElement('h3');
+    heading.textContent = `${title} - ${field}`;
+    div.appendChild(heading);
+    div.appendChild(canvas);
+    chartContainer.appendChild(div);
+
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Arquivo 1',
+            data: values1,
+            borderColor: 'rgba(54, 162, 235, 0.8)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: false
+          },
+          {
+            label: 'Arquivo 2',
+            data: values2,
+            borderColor: 'rgba(255, 99, 132, 0.8)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Índice'
+            }
+          },
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: field
+            }
+          }
+        }
+      }
+    });
+  }
+
+  for (const sentence in data) {
+    const fields = Object.keys(data[sentence].file1[0] || {});
+    fields.forEach(field => {
+      const values1 = data[sentence].file1.map(v => v[field]);
+      const values2 = data[sentence].file2.map(v => v[field]);
+      const labels = Array.from({ length: Math.max(values1.length, values2.length) }, (_, i) => i + 1);
+      createChart(sentence, labels, values1, values2, field);
+    });
+  }
 }
 </script>
 </body>
