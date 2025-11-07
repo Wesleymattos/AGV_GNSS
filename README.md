@@ -73,3 +73,13 @@ Data: 07/11/2025
 horário: 16:48
 versão: 1.0.10
 Melhoria: Foi adicionado uma nova função gráficos no comparador de nmea média de valores
+
+
+
+
+######################################################################### Vamos seguir o padrão de versionamento de código, o versionamento semântico, Major, minor.patch
+
+Correção (patch) - 1.0.0 / 1.0.1 = corrigiu bug
+Nova função compatível - 1.0.0 / 1.1.0 = Adicionou recurso
+Mudança grande - 1.2.5 / 2.0.0 = Reescreveu ou alterou compatibilidade 
+
