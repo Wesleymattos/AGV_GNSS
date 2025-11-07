@@ -23,22 +23,22 @@
   
 
 
-<button onclick="window.open('Analise_dados.html', '_blank')">
+<button title="Analise os dados coletados" onclick="window.open('Analise_dados.html', '_blank')">
     Análise de dados
 </button>
 
-<button onclick="window.open('quadrante_nemea.html', '_blank')">
+<button title="Vizualize o quadrante da constelação de satélites" onclick="window.open('quadrante_nemea.html', '_blank')">
     Quadrante
 </button>
 
-<button onclick="window.open('media_km.html', '_blank')">
+<button title="Faça a média de velocidade utilizando os logs coletados" onclick="window.open('media_km.html', '_blank')">
     Media de velocidade km/h
 </button>
-<button onclick="window.open('InteragirAGV.html', '_blank')">
+<button title="Ligue e desligue os periféricos do AGV" onclick="window.open('InteragirAGV.html', '_blank')">
     Interagir com AGV
 </button>
 
-    <button onclick="window.open('envio_firebase_com_slider.html', '_blank')">
+    <button title="Reproduza logs já coletados" onclick="window.open('envio_firebase_com_slider.html', '_blank')">
     Envio de logs 
 </button>
 
@@ -53,22 +53,22 @@
   </h2>
 </div>
       <div class="container">
-      <p><b>Latitude:</b> <span id="lat_rmc">—</span></p>
-      <p><b>Longitude:</b> <span id="lon_rmc">—</span></p>
-      <p><b>Speed (km/h):</b> <span id="speed">—</span></p>
-      <p><b>Direção (°):</b> <span id="heading">—</span></p>
-      <p><b>Data:</b> <span id="date">—</span></p>
-      <p><b>Satélites 🛰️:</b> <span id="sats">—</span></p>
-      <p><b>Hdop:</b> <span id="hdop1">—</span></p>
-      <p><b>Pdop:</b> <span id="pdop1">—</span></p>
-      <p><b>Hdop (GSA):</b> <span id="hdop_gsa1">—</span></p>
-      <p><b>Vdop:</b> <span id="vdop1">—</span></p>
-      <p><b>RMS (erro total):</b> <span id="gst_rms">—</span></p>
-      <p><b>Sigma Latitude:</b> <span id="gst_sigma_lat">—</span></p>
-      <p><b>Sigma Longitude:</b> <span id="gst_sigma_lon">—</span></p>
-      <p><b>Erro Semi-eixo Maior:</b> <span id="gst_major">—</span></p>
-      <p><b>Erro Semi-eixo Menor:</b> <span id="gst_minor">—</span></p>
-      <p><b>Orientação da Elipse (°):</b> <span id="gst_orientation">—</span></p>
+      <p><b title="Coordenada norte-sul da posição GNSS.">Latitude:</b> <span id="lat_rmc">—</span></p>
+      <p><b title="Coordenada leste-oeste da posição GNSS.">Longitude:</b> <span id="lon_rmc">—</span></p>
+      <p><b title="Velocidade atual calculada pelo receptor GNSS.">Speed (km/h):</b> <span id="speed">—</span></p>
+      <p><b title="Direção do movimento em graus, baseada no curso.">Direção (°):</b> <span id="heading">—</span></p>
+      <p><b title="Data atual recebida do sinal GNSS.">Data:</b> <span id="date">—</span></p>
+      <p><b title="Número de satélites usados na solução de posição.">Satélites 🛰️:</b> <span id="sats">—</span></p>
+      <p><b title="Diluição horizontal da precisão. Quanto menor, melhor.">Hdop:</b> <span id="hdop1">—</span></p>
+      <p><b title="Diluição da precisão tridimensional.">Pdop:</b> <span id="pdop1">—</span></p>
+      <p><b title="Hdop calculado a partir da sentença GSA.">Hdop (GSA):</b> <span id="hdop_gsa1">—</span></p>
+      <p><b title="Diluição vertical da precisão.">Vdop:</b> <span id="vdop1">—</span></p>
+      <p><b title="Erro médio total da posição GNSS. Quanto menor, mais precisa.">RMS (erro total):</b> <span id="gst_rms">—</span></p>
+      <p><b title="Erro 1-sigma na latitude (norte-sul).">Sigma Latitude:</b> <span id="gst_sigma_lat">—</span></p>
+      <p><b title="Erro 1-sigma na longitude (leste-oeste).">Sigma Longitude:</b> <span id="gst_sigma_lon">—</span></p>
+      <p><b title="Maior erro direcional da elipse de precisão.">Erro Semi-eixo Maior:</b> <span id="gst_major">—</span></p>
+      <p><b title="Menor erro direcional da elipse de precisão.">Erro Semi-eixo Menor:</b> <span id="gst_minor">—</span></p>
+      <p><b title="Direção do maior erro em relação ao norte geográfico.">Orientação da Elipse (°):</b> <span id="gst_orientation">—</span></p>
       </div>
 
 
@@ -101,22 +101,22 @@
 </div>
 
       <div class="container">
-      <p><b>Latitude:</b> <span id="lat_rmc2">—</span></p>
-      <p><b>Longitude:</b> <span id="lon_rmc2">—</span></p>
-      <p><b>Speed(km/h):</b> <span id="speed2">—</span></p>
-      <p><b>Direção (°):</b> <span id="heading2">—</span></p>
-      <p><b>Data:</b> <span id="date2">—</span></p>
-      <p><b>Satélites 🛰️:</b> <span id="sats2">—</span></p>
-      <p><b>Hdop:</b> <span id="hdop">—</span></p>
-      <p><b>Pdop:</b> <span id="pdop">—</span></p>
-      <p><b>Hdop (GSA):</b> <span id="hdop_gsa">—</span></p>
-      <p><b>Vdop:</b> <span id="vdop">—</span></p>
-      <p><b>RMS (erro total):</b> <span id="gst_rms2">—</span></p>
-      <p><b>Sigma Latitude:</b> <span id="gst_sigma_lat2">—</span></p>
-      <p><b>Sigma Longitude:</b> <span id="gst_sigma_lon2">—</span></p>
-      <p><b>Erro Semi-eixo Maior:</b> <span id="gst_major2">—</span></p>
-      <p><b>Erro Semi-eixo Menor:</b> <span id="gst_minor2">—</span></p>
-      <p><b>Orientação da Elipse (°):</b> <span id="gst_orientation2">—</span></p>
+      <p><b title="Coordenada norte-sul da posição GNSS.">Latitude:</b> <span id="lat_rmc2">—</span></p>
+      <p><b title="Coordenada leste-oeste da posição GNSS.">Longitude:</b> <span id="lon_rmc2">—</span></p>
+      <p><b title="Velocidade atual calculada pelo receptor GNSS.">Speed(km/h):</b> <span id="speed2">—</span></p>
+      <p><b title="Direção do movimento em graus, baseada no curso.">Direção (°):</b> <span id="heading2">—</span></p>
+      <p><b title="Data atual recebida do sinal GNSS.">Data:</b> <span id="date2">—</span></p>
+      <p><b title="Número de satélites usados na solução de posição.">Satélites 🛰️:</b> <span id="sats2">—</span></p>
+      <p><b title="Diluição horizontal da precisão. Quanto menor, melhor.">Hdop:</b> <span id="hdop">—</span></p>
+      <p><b title="Diluição da precisão tridimensional.">Pdop:</b> <span id="pdop">—</span></p>
+      <p><b title="Hdop calculado a partir da sentença GSA.">Hdop (GSA):</b> <span id="hdop_gsa">—</span></p>
+      <p><b title="Diluição vertical da precisão.">Vdop:</b> <span id="vdop">—</span></p>
+      <p><b title="Erro médio total da posição GNSS. Quanto menor, mais precisa.">RMS (erro total):</b> <span id="gst_rms2">—</span></p>
+      <p><b title="Erro 1-sigma na latitude (norte-sul).">Sigma Latitude:</b> <span id="gst_sigma_lat2">—</span></p>
+      <p><b title="Erro 1-sigma na longitude (leste-oeste).">Sigma Longitude:</b> <span id="gst_sigma_lon2">—</span></p>
+      <p><b title="Maior erro direcional da elipse de precisão.">Erro Semi-eixo Maior:</b> <span id="gst_major2">—</span></p>
+      <p><b title="Menor erro direcional da elipse de precisão.">Erro Semi-eixo Menor:</b> <span id="gst_minor2">—</span></p>
+      <p><b title="Direção do maior erro em relação ao norte geográfico.">Orientação da Elipse (°):</b> <span id="gst_orientation2">—</span></p>
       </div>
       
 
@@ -671,7 +671,7 @@ function clearCombinedPaths() {
     <script src="script.js"></script> 
 
       <footer>
-    Desenvolvido por Wesley de Mattos — Versão 1.0.6 — <span id="ano"></span>
+    Desenvolvido por Wesley de Mattos — Versão 1.0.7 — <span id="ano"></span>
   </footer>
  
   <script>
