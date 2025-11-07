@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Comparador de Sentenças NMEA</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; font-size: 20px; }
+  h2 { color: #2c3e50; font-size: 28px; }
+  h3 { font-size: 24px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 18px; }
+  th, td { border: 1px solid #ccc; padding: 12px; text-align: center; }
+  th { background-color: #f4f4f4; }
+  input, button { font-size: 18px; padding: 10px; margin: 5px 0; }
+</style>
+
+</head>
+<body>
+  <h2>Comparador de Sentenças NMEA</h2>
+  <input type="file" id="file1"> Arquivo 1<br><br>
+  <input type="file" id="file2"> Arquivo 2<br><br>
+  <button onclick="processFiles()">Comparar</button>
+  <div id="output"></div>
+
+<script>
+function readFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(/\r?\n/));
+    reader.readAsText(file);
+  });
+}
+
+function parseGPGGA(parts) {
+  return {
+    latitude: parseFloat(parts[2]) || 0,
+    longitude: parseFloat(parts[4]) || 0,
+    fixQuality: parseInt(parts[6]) || 0,
+    satellites: parseInt(parts[7]) || 0,
+    hdop: parseFloat(parts[8]) || 0,
+    altitude: parseFloat(parts[9]) || 0
+  };
+}
+
+function parseGPGSA(parts) {
+  return {
+    pdop: parseFloat(parts[15]) || 0,
+    hdop: parseFloat(parts[16]) || 0,
+    vdop: parseFloat(parts[17]) || 0
+  };
+}
+
+function parseGPGST(parts) {
+  return {
+    rms: parseFloat(parts[2]) || 0,
+    sigmaLat: parseFloat(parts[3]) || 0,
+    sigmaLon: parseFloat(parts[4]) || 0,
+    semiMajor: parseFloat(parts[5]) || 0,
+    semiMinor: parseFloat(parts[6]) || 0,
+    orientation: parseFloat(parts[7]) || 0
+  };
+}
+
+function parseGPRMC(parts) {
+  return {
+    speed: parseFloat(parts[7]) || 0,
+    direction: parseFloat(parts[8]) || 0,
+    latitude: parseFloat(parts[3]) || 0,
+    longitude: parseFloat(parts[5]) || 0
+  };
+}
+
+function average(values) {
+  const sum = values.reduce((a, b) => a + b, 0);
+  return values.length ? sum / values.length : 0;
+}
+
+function processFiles() {
+  const file1 = document.getElementById('file1').files[0];
+  const file2 = document.getElementById('file2').files[0];
+  if (!file1 || !file2) {
+    alert("Selecione os dois arquivos.");
+    return;
+  }
+
+  Promise.all([readFile(file1), readFile(file2)]).then(([lines1, lines2]) => {
+    const data = {
+      GPGGA: { file1: [], file2: [] },
+      GPGSA: { file1: [], file2: [] },
+      GPGST: { file1: [], file2: [] },
+      GPRMC: { file1: [], file2: [] }
+    };
+
+    lines1.forEach(line => {
+      const parts = line.split(',');
+      if (line.startsWith('$GPGGA')) data.GPGGA.file1.push(parseGPGGA(parts));
+      else if (line.startsWith('$GPGSA')) data.GPGSA.file1.push(parseGPGSA(parts));
+      else if (line.startsWith('$GPGST')) data.GPGST.file1.push(parseGPGST(parts));
+      else if (line.startsWith('$GPRMC')) data.GPRMC.file1.push(parseGPRMC(parts));
+    });
+
+    lines2.forEach(line => {
+      const parts = line.split(',');
+      if (line.startsWith('$GPGGA')) data.GPGGA.file2.push(parseGPGGA(parts));
+      else if (line.startsWith('$GPGSA')) data.GPGSA.file2.push(parseGPGSA(parts));
+      else if (line.startsWith('$GPGST')) data.GPGST.file2.push(parseGPGST(parts));
+      else if (line.startsWith('$GPRMC')) data.GPRMC.file2.push(parseGPRMC(parts));
+    });
+
+    const output = document.getElementById('output');
+    output.innerHTML = '';
+
+    function renderTable(title, fields, values1, values2) {
+      let html = `<h3>${title}</h3><table><tr><th>Campo</th><th>Média Arquivo 1</th><th>Média Arquivo 2</th><th>Diferença</th></tr>`;
+      fields.forEach(field => {
+        const avg1 = average(values1.map(v => v[field]));
+        const avg2 = average(values2.map(v => v[field]));
+        const diff = Math.abs(avg1 - avg2);
+        html += `<tr><td>${field}</td><td>${avg1.toFixed(3)}</td><td>${avg2.toFixed(3)}</td><td>${diff.toFixed(3)}</td></tr>`;
+      });
+      html += '</table>';
+      output.innerHTML += html;
+    }
+
+    renderTable('GPGGA', ['latitude', 'longitude', 'fixQuality', 'satellites', 'hdop', 'altitude'], data.GPGGA.file1, data.GPGGA.file2);
+    renderTable('GPGSA', ['pdop', 'hdop', 'vdop'], data.GPGSA.file1, data.GPGSA.file2);
+    renderTable('GPGST', ['rms', 'sigmaLat', 'sigmaLon', 'semiMajor', 'semiMinor', 'orientation'], data.GPGST.file1, data.GPGST.file2);
+    renderTable('GPRMC', ['speed', 'direction', 'latitude', 'longitude'], data.GPRMC.file1, data.GPRMC.file2);
+  });
+}
+</script>
+</body>
+</html>
