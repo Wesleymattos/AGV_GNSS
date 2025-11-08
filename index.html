@@ -422,6 +422,12 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("hdop1").textContent = data.hdop; // <-- Novo campo
 
           window.satsForChart1 = data.sats; // ✅ Atualiza gráfico do receptor 1
+          
+        // Atualiza gráfico
+         satelliteChart.data.labels.push(satelliteChart.data.labels.length);
+         satelliteChart.data.datasets[0].data.push(data.sats);
+         satelliteChart.update();
+
 
 
           marker1.setLatLng([+data.lat, +data.lon]);
@@ -484,6 +490,14 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           map2.panTo([+data.lat, +data.lon]);
 
           window.satsForChart2 = data.sats; // ✅ Atualiza gráfico do receptor 2
+          
+
+     // Atualiza gráfico
+      satelliteChart.data.labels.push(satelliteChart.data.labels.length);
+      satelliteChart.data.datasets[1].data.push(data.sats);
+      satelliteChart.update();
+
+
 
           path2.push([+data.lat, +data.lon]);
           polyline2.setLatLngs(path2);
@@ -743,28 +757,12 @@ function clearCombinedPaths() {
   });
 
   let time = 0;
-  setInterval(() => {
-    const satellites1 = window.satsForChart1;
-    const satellites2 = window.satsForChart2;
 
-    satelliteChart.data.labels.push(time);
-
-    satelliteChart.data.datasets[0].data.push(
-      typeof satellites1 !== 'undefined' && !isNaN(satellites1) ? satellites1 : null
-    );
-
-    satelliteChart.data.datasets[1].data.push(
-      typeof satellites2 !== 'undefined' && !isNaN(satellites2) ? satellites2 : null
-    );
-
-    satelliteChart.update();
-    time++;
-  }, 100);
 </script>
 
 
       <footer>
-    Desenvolvido por Wesley de Mattos — versão: 1.1.10 — <span id="ano"></span>
+    Desenvolvido por Wesley de Mattos — versão: 1.1.11 — <span id="ano"></span>
   </footer>
  
   <script>

@@ -84,11 +84,15 @@ Nova função compatível - 1.0.0 / 1.1.0 = Adicionou recurso
 Mudança grande - 1.2.5 / 2.0.0 = Reescreveu ou alterou compatibilidade 
 
 
-
-
+--------------------------------------------------------------------------------------
 
 
 Data: 08/11/2025
 horário: 11:43
 versão: 1.1.10
 Melhoria: Foi adicionado uma nova função gráficos em tempo real
+
+Data: 08/11/2025
+horário: 12:21
+versão: 1.1.11
+Melhoria: Foi adicionado uma correção para sicronismo de dados entre o gráfico de satélites no mesmo tempo
