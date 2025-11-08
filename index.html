@@ -10,6 +10,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="gps-icon.png" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
 </head>
@@ -420,6 +421,8 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("sats").textContent = data.sats;
           document.getElementById("hdop1").textContent = data.hdop; // <-- Novo campo
 
+          window.satsForChart1 = data.sats; // ✅ Atualiza gráfico do receptor 1
+
 
           marker1.setLatLng([+data.lat, +data.lon]);
           map1.panTo([+data.lat, +data.lon]);
@@ -479,6 +482,8 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           document.getElementById("hdop").textContent = data.hdop; // <-- Novo campo
           marker2.setLatLng([+data.lat, +data.lon]);
           map2.panTo([+data.lat, +data.lon]);
+
+          window.satsForChart2 = data.sats; // ✅ Atualiza gráfico do receptor 2
 
           path2.push([+data.lat, +data.lon]);
           polyline2.setLatLngs(path2);
@@ -674,6 +679,89 @@ function clearCombinedPaths() {
   </script>
 
     <script src="script.js"></script> 
+
+
+<div id="graficoSatellites" style="margin-top: 40px; padding: 20px; border: 1px solid #ccc; background-color: #f9f9f9;">
+  <h3>Satélites em Tempo Real</h3>
+  <canvas id="satelliteChart" width="800" height="400"></canvas>
+</div>
+
+
+<script>
+  const ctx = document.getElementById('satelliteChart').getContext('2d');
+  const satelliteChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Receiver 1',
+          data: [],
+          borderColor: 'rgba(255, 99, 132, 1)', // vermelho
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          fill: false,
+          tension: 0.1
+        },
+        {
+          label: 'Receiver 2',
+          data: [],
+          borderColor: 'rgba(54, 162, 235, 1)', // azul
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          fill: false,
+          tension: 0.1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Satélites em Tempo Real'
+        },
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Tempo (s)'
+          }
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Satélites'
+          },
+          suggestedMax: 35
+        }
+      }
+    }
+  });
+
+  let time = 0;
+  setInterval(() => {
+    const satellites1 = window.satsForChart1;
+    const satellites2 = window.satsForChart2;
+
+    satelliteChart.data.labels.push(time);
+
+    satelliteChart.data.datasets[0].data.push(
+      typeof satellites1 !== 'undefined' && !isNaN(satellites1) ? satellites1 : null
+    );
+
+    satelliteChart.data.datasets[1].data.push(
+      typeof satellites2 !== 'undefined' && !isNaN(satellites2) ? satellites2 : null
+    );
+
+    satelliteChart.update();
+    time++;
+  }, 100);
+</script>
+
 
       <footer>
     Desenvolvido por Wesley de Mattos — versão: 1.0.10 — <span id="ano"></span>
