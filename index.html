@@ -432,7 +432,7 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
 
           marker1.setLatLng([+data.lat, +data.lon]);
           map1.panTo([+data.lat, +data.lon]);
-          map2.panTo([+data.lat, +data.lon]);
+          //map2.panTo([+data.lat, +data.lon]);
 
           path1.push([+data.lat, +data.lon]);
           polyline1.setLatLngs(path1);
@@ -779,7 +779,7 @@ setInterval(() => {
 
 
       <footer>
-    Desenvolvido por Wesley de Mattos — versão: 1.1.11 — <span id="ano"></span>
+    Desenvolvido por Wesley de Mattos — versão: 1.1.12 — <span id="ano"></span>
   </footer>
  
   <script>

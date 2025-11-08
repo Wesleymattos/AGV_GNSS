@@ -1,7 +1,7 @@
 # AGV_GNSS
 Data da ultima atualização: 07/11/2025
 Autor: Wesley de Mattos
-versão: 1.1.10
+versão: 1.1.12
 
 observação: A apartir do dia 05/11/2025 o Log Remote Agv ganhou sua primeira versão oficial 1.0.0
 
@@ -96,3 +96,8 @@ Data: 08/11/2025
 horário: 12:21
 versão: 1.1.11
 Melhoria: Foi adicionado uma correção para sicronismo de dados entre o gráfico de satélites no mesmo tempo
+
+Data: 08/11/2025
+horário: 13:03
+versão: 1.1.12
+Melhoria: corrigi o problema do zoom do mapa 2
