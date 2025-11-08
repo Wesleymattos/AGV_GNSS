@@ -755,9 +755,26 @@ function clearCombinedPaths() {
       }
     }
   });
+/*
+ let time = 0;
+setInterval(() => {
+  const satellites1 = window.satsForChart1;
+  const satellites2 = window.satsForChart2;
 
-  let time = 0;
+  satelliteChart.data.labels.push(time);
 
+  satelliteChart.data.datasets[0].data.push(
+    typeof satellites1 !== 'undefined' && !isNaN(satellites1) ? satellites1 : null
+  );
+
+  satelliteChart.data.datasets[1].data.push(
+    typeof satellites2 !== 'undefined' && !isNaN(satellites2) ? satellites2 : null
+  );
+
+  satelliteChart.update();
+  time++;
+}, 1000);
+*/
 </script>
 
 
