@@ -1,0 +1,12 @@
+unlogall com2
+unlogall com1
+log com1 rxstatuseventa onchanged
+log com1 gpvtg ontime 0.1
+log com1 gpggalong ontime 0.1
+log com1 gpgsv ontime 0.1
+log com1 gprmc ontime 0.1
+log com1 gpgsa ontime 0.1
+log com1 gpzda ontime 0.1
+log com1 gpgst ontime 0.1
+
+
