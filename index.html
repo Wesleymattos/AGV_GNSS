@@ -840,8 +840,67 @@ function clearCombinedPaths() {
   </script>
 
 
+
+<div id="chatBox" style="margin-top: 40px; border: 1px solid #ccc; padding: 20px; background-color: #f1f1f1;">
+  <h3>Chat</h3>
+
+  <!-- Campo para nome -->
+  <input type="text" id="chatName" placeholder="Digite seu nome..." style="width: 50%; padding: 8px; margin-bottom: 10px;">
+  
+  <!-- Área de mensagens -->
+  <div id="chatMessages" style="height: 200px; overflow-y: auto; background: #fff; padding: 10px; border: 1px solid #aaa;"></div>
+  
+  <!-- Campo de mensagem -->
+  <input type="text" id="chatInput" placeholder="Digite sua mensagem..." style="width: 80%; padding: 8px;">
+  <button onclick="sendChatMessage()" style="padding: 8px;">Enviar</button>
+</div>
+
+
+<script>
+  const chatRef = db.ref("chat");
+
+  // Envia mensagem para o Firebase
+  function sendChatMessage() {
+    const nameInput = document.getElementById("chatName");
+    const input = document.getElementById("chatInput");
+    const name = nameInput.value.trim();
+    const message = input.value.trim();
+
+    if (name === "") {
+      alert("Por favor, digite seu nome antes de enviar mensagens.");
+      return;
+    }
+
+    if (message === "") return;
+
+    const timestamp = Date.now();
+    chatRef.push({ name: name, text: message, time: timestamp });
+    input.value = "";
+  }
+
+  // Escuta novas mensagens e exibe no chat
+  chatRef.on("child_added", snapshot => {
+    const data = snapshot.val();
+    const chatMessages = document.getElementById("chatMessages");
+    const msgDiv = document.createElement("div");
+    const time = new Date(data.time).toLocaleTimeString();
+
+    msgDiv.innerHTML = `<strong>${data.name}</strong> [${time}]: ${data.text}`;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+
+  // Envia ao pressionar Enter
+  document.getElementById("chatInput").addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      sendChatMessage();
+    }
+  });
+</script>
+
+
       <footer>
-    Desenvolvido por Wesley de Mattos — versão: 1.1.12 — <span id="ano"></span>
+    Desenvolvido por Wesley de Mattos — versão: 1.3.12 — <span id="ano"></span>
   </footer>
  
   <script>
