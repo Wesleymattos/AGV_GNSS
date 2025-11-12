@@ -1,0 +1,126 @@
+{
+  "agv": {
+    "CH_GERAL": false,
+    "DCAC": false,
+    "NT03_1": false,
+    "NT03_2": false,
+    "R1": false,
+    "R2": false,
+    "R3": false,
+    "status": false,
+    "voltage": 120
+  },
+  "chat": {
+    "-OdfQQTG4GxHXMv7ebCD": {
+      "name": "Wesley",
+      "text": "Fala pessoal",
+      "time": 1762738942698
+    },
+    "-OdfQbOhtb56ex9DRAKG": {
+      "name": "Wesley",
+      "text": "Agora temos um chat aqui",
+      "time": 1762738991558
+    },
+    "-OdfQo6-YyUipMV_hcpj": {
+      "name": "Wesley",
+      "text": "Para brainstorming",
+      "time": 1762739043606
+    },
+    "-OdfR6YM-bi4vKd_zWtA": {
+      "name": "Wesley",
+      "text": "Estou realizando o teste simulado enviando os logs prontos",
+      "time": 1762739123244
+    },
+    "-OdfTv5GALYAzaheL5_U": {
+      "name": "ㅤㅤㅤㅤㅤ",
+      "text": ".",
+      "time": 1762739860008
+    },
+    "-OdfXiZwfxtfwEMBt7DD": {
+      "name": "Wesley S23",
+      "text": "Oi",
+      "time": 1762740857394
+    },
+    "-OdhU1HvsyoOsyFNvBcB": {
+      "name": "David",
+      "text": "Aoba",
+      "time": 1762773443291
+    },
+    "-OdhUDjdEXGeEq3h0KrR": {
+      "name": "David",
+      "text": "Escoliose",
+      "time": 1762773494282
+    },
+    "-OdhUgpRwz8eoL7mxZoj": {
+      "name": "David",
+      "text": "piramede",
+      "time": 1762773617457
+    },
+    "-OdhUhcDdxnynqhvSYC2": {
+      "name": "David",
+      "text": "tétano",
+      "time": 1762773620706
+    },
+    "-OdhUlY3RMlXJlpGOQ2b": {
+      "name": "WEsley",
+      "text": "Bom dia, tudo bem?",
+      "time": 1762773637399
+    },
+    "-OdhUmzO4iZ4jnrpIHLp": {
+      "name": "David",
+      "text": "tudo",
+      "time": 1762773642670
+    },
+    "-OdhUq4IeIuLe2Z_e5wf": {
+      "name": "Wesley",
+      "text": "Vamos lá no protótipo?",
+      "time": 1762773655975
+    },
+    "-OdhUuG4GvZGkgcLozTe": {
+      "name": "David",
+      "text": "vamo",
+      "time": 1762773672474
+    },
+    "-OdhWX4d8hSMSnGNsZzc": {
+      "name": "JOAO",
+      "text": "Opa, bom dia!",
+      "time": 1762774098356
+    },
+    "-OdhcTnZQK7NXn7b_n8E": {
+      "name": "Wesley",
+      "text": "Conectei a Smart7 e a Trimble em bancada para ver o funcionamento das novas funções",
+      "time": 1762775919930
+    },
+    "-OdmXbpiUrIkwefy15tc": {
+      "name": "wesley",
+      "text": "oi",
+      "time": 1762858270107
+    },
+    "-Ods5l7NYFVsaJjwCcQF": {
+      "name": "wesley",
+      "text": "oii",
+      "time": 1762951630289
+    }
+  },
+  "gnss": {
+    "kml1": "-51.184261,-29.879512,0",
+    "kml2": "-51.184255,-29.879516,0",
+    "raw": "$GPVTG,97.111,T,97.111,M,1.188,N,2.200,K,A*23",
+    "raw2": "$GPGGA,192724.20,2952.770449,S,05111.049633,W,1,24,0.6,10.991,M,4.461,M,,*67",
+    "raw3": "$GPGSV,13,9,51,231,00,000,,312,07,110,,311,47,147,37,336,48,230,*4C"
+  },
+  "gnss_precision": {
+    "alt_err": "",
+    "lat_err": "",
+    "lon_err": "",
+    "rms": ""
+  },
+  "receiver": {
+    "comando": "yy",
+    "comando2": "iu",
+    "comando3": "oie",
+    "receiver1": "Receiver 1",
+    "receiver2": "Receiver 2",
+    "receiver3": "wesley"
+  }
+}
