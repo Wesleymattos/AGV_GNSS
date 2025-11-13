@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulador GNSS Carro → Firebase</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+    body { font-family: Arial; margin: 20px; background: #111; color: #0f0; }
+    #status { padding: 10px; background: #222; border: 1px solid #333; }
+    .coords { font-size: 14px; margin-top: 10px; }
+    .compass line { stroke: #f00; stroke-width: 3; }
+    button { margin-top: 10px; padding: 8px 12px; background: #0f0; color: #111; border: none; cursor: pointer; font-weight: bold; }
+    select { margin-left: 10px; }
+
+    .compass-container {
+    margin-top: 20px;
+    width: 150px;
+    height: 150px;
+    position: relative;
+}
+.compass {
+    width: 100%;
+    height: 100%;
+    transform-origin: center;
+    transition: transform 0.2s ease;
+}
+.compass circle {
+    fill: #222;
+    stroke: #0f0;
+    stroke-width: 3;
+}
+.compass line {
+    stroke: #f00;
+    stroke-width: 3;
+}
+</style>
+
+</head>
+<body>
+  <h2>🚗 Simulador GNSS Carro → Firebase</h2>
+  <p><b>W</b> frente | <b>S</b> trás | ← → ângulo | <b>R</b> reset</p>
+  <pre id="status">Inicializando...</pre>
+  <div class="coords" id="coords"></div>
+
+  <div class="control">
+    <label>Velocidade: <span id="velLabel">0</span></label><br>
+    <input type="range" id="velSlider" min="0" max="100" value="0">
+  </div>
+
+  <div class="control">
+    <label>Destino:</label>
+    <select id="destinoSelect">
+      <option value="raw">raw</option>
+      <option value="raw2">raw2</option>
+      <option value="raw3">raw3</option>
+    </select>
+    <button id="btnEnviar">Enviar Manual</button>
+  </div>
+
+  <div class="compass-container">
+    <svg class="compass" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45"></circle>
+      <line x1="50" y1="50" x2="50" y2="5"></line>
+    </svg>
+  </div>
+
+  <script>
+    window.addEventListener("load", function() {
+      try {
+        const firebaseConfig = {
+          apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
+          authDomain: "log--analyzer-web.firebaseapp.com",
+          databaseURL: "https://log--analyzer-web-default-rtdb.firebaseio.com",
+          projectId: "log--analyzer-web",
+          storageBucket: "log--analyzer-web.appspot.com",
+          messagingSenderId: "908592112855",
+          appId: "1:908592112855:web:ae60fc51e47a66390f3c92",
+          measurementId: "G-PEWMF5LTLQ"
+        };
+
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.database();
+        const status = document.getElementById("status");
+        const coordsDiv = document.getElementById("coords");
+        const velSlider = document.getElementById("velSlider");
+        const velLabel = document.getElementById("velLabel");
+        const compass = document.querySelector(".compass");
+        const destinoSelect = document.getElementById("destinoSelect");
+        const btnEnviar = document.getElementById("btnEnviar");
+
+        let lat = -29.9200;
+        let lon = -51.1800;
+        let angulo = 0;
+        let velocidade = 0;
+        let passo = 0;
+
+        function formatLat(lat) {
+          const dir = lat >= 0 ? "N" : "S";
+          const absLat = Math.abs(lat);
+          const graus = Math.floor(absLat);
+          const minutos = (absLat - graus) * 60;
+          return `${String(graus).padStart(2,"0")}${minutos.toFixed(3)},${dir}`;
+        }
+
+        function formatLon(lon) {
+          const dir = lon >= 0 ? "E" : "W";
+          const absLon = Math.abs(lon);
+          const graus = Math.floor(absLon);
+          const minutos = (absLon - graus) * 60;
+          return `${String(graus).padStart(3,"0")}${minutos.toFixed(3)},${dir}`;
+        }
+
+        function gerarGPGGA(lat, lon) {
+          const latStr = formatLat(lat);
+          const lonStr = formatLon(lon);
+          const hora = new Date();
+          const hhmmss = hora.toISOString().substr(11,8).replace(/:/g,"");
+          return `$GPGGA,${hhmmss},${latStr},${lonStr},1,08,0.9,545.4,M,46.9,M,,*47`;
+        }
+
+        async function enviar() {
+          const nmea = gerarGPGGA(lat, lon);
+          const destino = destinoSelect.value;
+          try {
+            await db.ref(`gnss/${destino}`).set(nmea);
+            await db.ref("gnss/info").set({ angulo, velocidade, timestamp: Date.now() });
+            status.textContent = `✅ Enviado para ${destino}: ${nmea}`;
+            coordsDiv.textContent = `Lat: ${lat.toFixed(6)} | Lon: ${lon.toFixed(6)} | Ângulo: ${angulo}° | Vel: ${velocidade}`;
+          } catch (e) {
+            status.textContent = "❌ Erro ao enviar: " + e.message;
+          }
+        }
+
+        function atualizarBussola() {
+          compass.style.transform = `rotate(${angulo}deg)`;
+        }
+
+        document.addEventListener("keydown", (ev) => {
+          const k = ev.key.toLowerCase();
+          const rad = angulo * Math.PI / 180;
+          if (k === "w") {
+            lat += Math.cos(rad) * passo;
+            lon += Math.sin(rad) * passo;
+          } else if (k === "s") {
+            lat -= Math.cos(rad) * passo;
+            lon -= Math.sin(rad) * passo;
+          } else if (ev.key === "ArrowLeft") {
+            angulo = (angulo - 5 + 360) % 360;
+            atualizarBussola();
+          } else if (ev.key === "ArrowRight") {
+            angulo = (angulo + 5) % 360;
+            atualizarBussola();
+          } else if (k === "r") {
+            lat = -29.9200; lon = -51.1800; angulo = 0;
+            atualizarBussola();
+          }
+          enviar();
+        });
+
+        velSlider.addEventListener("input", () => {
+          velocidade = parseInt(velSlider.value);
+          velLabel.textContent = velocidade;
+          passo = velocidade * 0.00001;
+        });
+
+        btnEnviar.addEventListener("click", enviar);
+
+        status.textContent = "✅ Firebase conectado — Aguardando comandos...";
+        coordsDiv.textContent = `Lat: ${lat.toFixed(6)} | Lon: ${lon.toFixed(6)} | Ângulo: ${angulo}° | Vel: ${velocidade}`;
+        atualizarBussola();
+
+      } catch (err) {
+        document.getElementById("status").textContent = "❌ Erro ao inicializar Firebase: " + err.message;
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
