@@ -45,7 +45,7 @@ body {
       border-radius: 4px;
       overflow-x: auto;
     }
-    #terminal, #terminal2 { 
+    #terminal, #terminal2, #terminal3 { 
       height: 400px;
       font-size: large;
       background: #000;

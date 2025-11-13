@@ -39,7 +39,7 @@
     Interagir com AGV
 </button>
 
-    <button title="Reproduza logs já coletados" onclick="window.open('envio_firebase_com_slider.html', '_blank')">
+    <button title="Reproduza logs já coletados" onclick="window.open('envio_firebase_com_sliderV2.html', '_blank')">
     Envio de logs 
 </button>
 
@@ -144,13 +144,85 @@
       </div>
       <div id="map2" class="map"></div>
     </div>
+    <div class="map-box">
+  <div style="text-align: center;">
+    <h2>
+      <span id="title3" style="color: green;">Receiver 3</span>
+      <input type="text" id="input3" placeholder="Nome da Antena 3" style="margin-left: 10px;">
+    </h2>
+  </div>
+
+  <div class="container">
+    <p><b title="Coordenada norte-sul da posição GNSS.">Latitude:</b> <span id="lat_rmc3">—</span></p>
+    <p><b title="Coordenada leste-oeste da posição GNSS.">Longitude:</b> <span id="lon_rmc3">—</span></p>
+    <p><b title="Velocidade atual calculada pelo receptor GNSS.">Speed (km/h):</b> <span id="speed3">—</span></p>
+    <p><b title="Direção do movimento em graus, baseada no curso.">Direção (°):</b> <span id="heading3">—</span></p>
+    <p><b title="Data atual recebida do sinal GNSS.">Data:</b> <span id="date3">—</span></p>
+    <p><b title="Número de satélites usados na solução de posição.">Satélites 🛰️:</b> <span id="sats3">—</span></p>
+    <p><b title="Diluição horizontal da precisão. Quanto menor, melhor.">Hdop:</b> <span id="hdop3">—</span></p>
+    <p><b title="Diluição da precisão tridimensional.">Pdop:</b> <span id="pdop3">—</span></p>
+    <p><b title="Hdop calculado a partir da sentença GSA.">Hdop (GSA):</b> <span id="hdop_gsa3">—</span></p>
+    <p><b title="Diluição vertical da precisão.">Vdop:</b> <span id="vdop3">—</span></p>
+    <p><b title="Erro médio total da posição GNSS. Quanto menor, mais precisa.">RMS (erro total):</b> <span id="gst_rms3">—</span></p>
+    <p><b title="Erro 1-sigma na latitude (norte-sul).">Sigma Latitude:</b> <span id="gst_sigma_lat3">—</span></p>
+    <p><b title="Erro 1-sigma na longitude (leste-oeste).">Sigma Longitude:</b> <span id="gst_sigma_lon3">—</span></p>
+    <p><b title="Maior erro direcional da elipse de precisão.">Erro Semi-eixo Maior:</b> <span id="gst_major3">—</span></p>
+    <p><b title="Menor erro direcional da elipse de precisão.">Erro Semi-eixo Menor:</b> <span id="gst_minor3">—</span></p>
+    <p><b title="Direção do maior erro em relação ao norte geográfico.">Orientação da Elipse (°):</b> <span id="gst_orientation3">—</span></p>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center;">
+    <h2>Enviar Comando para o Receptor</h2>
+    <input type="text" id="comandoInput3" placeholder="Digite um comando..." style="width: 400px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" />
+    <button onclick="enviarComando3()" style="padding: 10px 20px; margin-left: 10px;">Enviar</button>
+    <p id="statusEnvio3" style="margin-top: 10px; font-weight: bold;"></p>
+  </div>
+
+  <pre id="raw3">—</pre>
+  <pre id="terminal3">Aguardando dados...</pre>
+  <div class="controls">
+    <button id="startBtn3">Iniciar Log 3</button>
+    <button id="pauseBtn3" disabled>Pausar Log 3</button>
+    <button id="stopBtn3" disabled>Parar Log 3</button>
+    <button onclick="downloadKML(path3, 'antena3.kml')">Download KML 3</button>
+    <button onclick="clearPath(path3, polyline3)">Limpar Linha</button>
+  </div>
+  <div id="map3" class="map"></div>
+</div>
   </div>
 
 
-  <div class="map-box">
+  
+
+<div class="map-box">
   <h2 style="color: purple;">Comparação de Precisão (Mapa Combinado)</h2>
-  <p>Receiver 1 (vermelho) vs Receiver 2 (azul)</p>
-  <div id="mapComparado" class="map"></div>
+  <p>Receiver 1 (vermelho) vs Receiver 2 (azul) vs Receiver 3 (verde)</p>
+  
+<div style="position: relative;">
+  <div id="mapComparado" class="map" style="width: 100%; height: 400px;"></div>
+  
+  <!-- Caixa sobreposta à direita -->
+  <div id="infoDistancias" style="
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.9);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 999;
+    text-align: left;
+    min-width: 150px;
+  ">
+    <strong>Distâncias:</strong><br>
+    R1 ↔ R2: <span id="d12">0</span> cm<br>
+    R2 ↔ R3: <span id="d23">0</span> cm<br>
+    R3 ↔ R1: <span id="d13">0</span> cm
+  </div>
+</div>
+
+</div>
 
   <!-- Botões para o mapa comparado -->
 <div class="controls-compare" style="margin-top:10px;">
@@ -216,6 +288,27 @@ function enviarComando2() {
     })
     .catch(error => {
       status.textContent = "Erro ao enviar comando 2: " + error.message;
+      status.style.color = "red";
+    });
+}
+function enviarComando3() {
+  const comando = document.getElementById("comandoInput3").value;
+  const status = document.getElementById("statusEnvio3");
+
+  if (comando.trim() === "") {
+    status.textContent = "Por favor, digite um comando.";
+    status.style.color = "red";
+    return;
+  }
+
+  db.ref("receiver/comando3").set(comando)
+    .then(() => {
+      status.textContent = "Comando enviado!!";
+      status.style.color = "green";
+      document.getElementById("comandoInput3").value = "";
+    })
+    .catch(error => {
+      status.textContent = "Erro ao enviar comando 3: " + error.message;
       status.style.color = "red";
     });
 }
@@ -317,16 +410,22 @@ const gpsIcon = L.icon({
 
     let map1 = L.map('map1').setView([-30, -51], 19);
     let map2 = L.map('map2').setView([-30, -51], 19);
+    let map3 = L.map('map3').setView([-30, -51], 19);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map1);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map3);
 
 // Usa o novo ícone no marcador
 let marker1 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map1);
 let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
-    let path1 = [], path2 = [];
+let marker3 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map3);
+    let path1 = [], path2 = [], path3 = [];
+    
+    
     let polyline1 = L.polyline([], { color: 'red' }).addTo(map1);
     let polyline2 = L.polyline([], { color: 'blue' }).addTo(map2);
+    let polyline3 = L.polyline([], { color: 'green' }).addTo(map3);
 
     function clearPath(path, polyline) {
       path.length = 0;
@@ -347,6 +446,7 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
 
     const terminal = document.getElementById("terminal");
     const terminal2 = document.getElementById("terminal2");
+    const terminal3 = document.getElementById("terminal3");
 
     let isLogging = false, isPaused = false, logLines = [];
     document.getElementById("startBtn").onclick = () => {
@@ -406,6 +506,40 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
       a.click();
     };
 
+    
+let isLogging3 = false, isPaused3 = false, logLines3 = [];
+
+document.getElementById("startBtn3").onclick = () => {
+  isLogging3 = true;
+  isPaused3 = false;
+  logLines3 = [];
+  appendToTerminal(terminal3, ">>> LOG 3 INICIADO");
+  document.getElementById("startBtn3").disabled = true;
+  document.getElementById("pauseBtn3").disabled = false;
+  document.getElementById("stopBtn3").disabled = false;
+};
+
+document.getElementById("pauseBtn3").onclick = () => {
+  isPaused3 = !isPaused3;
+  document.getElementById("pauseBtn3").textContent = isPaused3 ? "Retomar Log 3" : "Pausar Log 3";
+  appendToTerminal(terminal3, isPaused3 ? ">>> LOG 3 PAUSADO" : ">>> LOG 3 RETOMADO");
+};
+
+document.getElementById("stopBtn3").onclick = () => {
+  isLogging3 = false;
+  isPaused3 = false;
+  appendToTerminal(terminal3, ">>> LOG 3 PARADO");
+  document.getElementById("startBtn3").disabled = false;
+  document.getElementById("pauseBtn3").disabled = true;
+  document.getElementById("stopBtn3").disabled = true;
+  const blob = new Blob([logLines3.join('\n')], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `log_antena3_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+  a.click();
+};
+
+
     db.ref("gnss/raw").on("value", snap => {
       const raw = snap.val();
       if (!raw) return;
@@ -437,6 +571,7 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
           marker1.setLatLng([+data.lat, +data.lon]);
           map1.panTo([+data.lat, +data.lon]);
           //map2.panTo([+data.lat, +data.lon]);
+         
 
           path1.push([+data.lat, +data.lon]);
           polyline1.setLatLngs(path1);
@@ -543,8 +678,67 @@ let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
       }
     });
 
-    // Atualiza o título enquanto digita
-// Atualiza título e envia para o banco
+    db.ref("gnss/raw3").on("value", snap => {
+  const raw = snap.val();
+  if (!raw) return;
+
+  document.getElementById("raw3").textContent = raw;
+  appendToTerminal(terminal3, raw);
+  if (isLogging3 && !isPaused3) logLines3.push(raw);
+
+  if (raw.startsWith("$GPGGA")) {
+    const data = parseGGA(raw);
+    if (data) {
+      document.getElementById("lat_rmc3").textContent = data.lat;
+      document.getElementById("lon_rmc3").textContent = data.lon;
+      document.getElementById("sats3").textContent = data.sats;
+      document.getElementById("hdop3").textContent = data.hdop;
+
+      marker3.setLatLng([+data.lat, +data.lon]);
+      map3.panTo([+data.lat, +data.lon]);
+      
+
+      // Atualiza gráfico (se tiver suporte para Receiver 3)
+      satelliteChart.data.labels.push(satelliteChart.data.labels.length);
+      satelliteChart.data.datasets[2].data.push(data.sats);
+      satelliteChart.update();
+
+      hdopChart.data.labels.push(hdopChart.data.labels.length);
+      hdopChart.data.datasets[2].data.push(data.hdop);
+      hdopChart.update();
+
+      path3.push([+data.lat, +data.lon]);
+      polyline3.setLatLngs(path3);
+    }
+  } else if (raw.startsWith("$GPVTG")) {
+    const vtg = parseVTG(raw);
+    if (vtg) {
+      document.getElementById("speed3").textContent = vtg.speed;
+      document.getElementById("heading3").textContent = vtg.heading;
+      document.getElementById("date3").textContent = vtg.date;
+    }
+  } else if (raw.startsWith("$GPGSA")) {
+    const gsa = parseGSA(raw);
+    if (gsa) {
+      document.getElementById("pdop3").textContent = gsa.pdop;
+      document.getElementById("hdop_gsa3").textContent = gsa.hdop;
+      document.getElementById("vdop3").textContent = gsa.vdop;
+      document.getElementById("fixType3").textContent = gsa.fixType === 3 ? "3D" : gsa.fixType === 2 ? "2D" : "Sem fix";
+    }
+  } else if (raw.startsWith("$GPGST")) {
+    const gst = parseGST(raw);
+    if (gst) {
+      document.getElementById("gst_rms3").textContent = gst.rms.toFixed(2);
+      document.getElementById("gst_sigma_lat3").textContent = gst.sigmaLat.toFixed(2);
+      document.getElementById("gst_sigma_lon3").textContent = gst.sigmaLon.toFixed(2);
+      document.getElementById("gst_major3").textContent = gst.sigmaMajor.toFixed(2);
+      document.getElementById("gst_minor3").textContent = gst.sigmaMinor.toFixed(2);
+      document.getElementById("gst_orientation3").textContent = gst.orientation.toFixed(1);
+    }
+  }
+});
+
+  // Atualiza título e envia para o banco
 document.getElementById('input1').addEventListener('input', function () {
   const value = this.value.trim();
   document.getElementById('title1').textContent = value || 'Receiver 1';
@@ -557,6 +751,14 @@ document.getElementById('input2').addEventListener('input', function () {
   db.ref("receiver/receiver2").set(value || 'Receiver 2');
 });
 
+// NOVO PARA RECEIVER 3
+document.getElementById('input3').addEventListener('input', function () {
+  const value = this.value.trim();
+  document.getElementById('title3').textContent = value || 'Receiver 3';
+  db.ref("receiver/receiver3").set(value || 'Receiver 3');
+});
+
+// Listener para atualizar os inputs e títulos ao carregar
 db.ref("receiver/receiver1").on("value", snapshot => {
   const value = snapshot.val();
   if (value !== null) {
@@ -572,6 +774,17 @@ db.ref("receiver/receiver2").on("value", snapshot => {
     document.getElementById("title2").textContent = value;
   }
 });
+
+// NOVO PARA RECEIVER 3
+db.ref("receiver/receiver3").on("value", snapshot => {
+  const value = snapshot.val();
+  if (value !== null) {
+    document.getElementById("input3").value = value;
+    document.getElementById("title3").textContent = value;
+  }
+});
+
+
 
 // ====== Mapa combinado para comparação ======
 let mapComparado = L.map('mapComparado').setView([-30, -51], 19);
@@ -596,15 +809,19 @@ const icon2 = L.icon({
 
 let markerComp1 = L.marker([-30, -51], { icon: icon1 }).addTo(mapComparado);
 let markerComp2 = L.marker([-30, -51], { icon: icon2 }).addTo(mapComparado);
+let markerComp3 = L.marker([-30, -51], { icon: icon2 }).addTo(mapComparado);
+
 
 let polylineComp1 = L.polyline([], { color: 'red' }).addTo(mapComparado);
 let polylineComp2 = L.polyline([], { color: 'blue' }).addTo(mapComparado);
+let polylineComp3 = L.polyline([], { color: 'green' }).addTo(mapComparado);
 
 let pathComp1 = [];
 let pathComp2 = [];
+let pathComp3 = [];
 
 // Atualiza o mapa combinado sempre que houver novas coordenadas
-function atualizarMapaComparado(lat1, lon1, lat2, lon2) {
+function atualizarMapaComparado(lat1, lon1, lat2, lon2, lat3, lon3) {
   if (lat1 && lon1) {
     pathComp1.push([+lat1, +lon1]);
     polylineComp1.setLatLngs(pathComp1);
@@ -616,6 +833,12 @@ function atualizarMapaComparado(lat1, lon1, lat2, lon2) {
     polylineComp2.setLatLngs(pathComp2);
     markerComp2.setLatLng([+lat2, +lon2]);
   }
+    if (lat3 && lon3) {
+    pathComp3.push([+lat3, +lon3]);
+    polylineComp3.setLatLngs(pathComp3);
+    markerComp3.setLatLng([+lat3, +lon3]);
+  }
+
 
   atualizarDiferenca();
 }
@@ -634,36 +857,39 @@ let labelDistancia = L.marker([-30, -51], {
 
 
 function atualizarDiferenca() {
-  if (pathComp1.length > 0 && pathComp2.length > 0) {
+  if (pathComp1.length > 0 && pathComp2.length > 0 && pathComp3.length > 0) {
     const p1 = pathComp1[pathComp1.length - 1];
     const p2 = pathComp2[pathComp2.length - 1];
+    const p3 = pathComp3[pathComp3.length - 1];
 
-    // Atualiza a linha entre os dois receptores
-    linhaDiferenca.setLatLngs([p1, p2]);
+    // Atualiza linha conectando os três receptores
+    linhaDiferenca.setLatLngs([p1, p2, p3]);
 
-    // Calcula distância (metros → centímetros)
-    const distancia = mapComparado.distance(p1, p2) * 100;
+    // Calcula distâncias entre pares (em metros)
+    const d12 = mapComparado.distance(p1, p2);
+    const d23 = mapComparado.distance(p2, p3);
+    const d13 = mapComparado.distance(p1, p3);
 
-    // Calcula ponto médio e desloca levemente (offset)
-    let midLat = (p1[0] + p2[0]) / 2;
-    let midLon = (p1[1] + p2[1]) / 2;
+    // Converte para cm e atualiza os spans
+    document.getElementById("d12").textContent = (d12 * 100).toFixed(1);
+    document.getElementById("d23").textContent = (d23 * 100).toFixed(1);
+    document.getElementById("d13").textContent = (d13 * 100).toFixed(1);
 
-    // deslocamento em "graus" (pequeno, depende da escala do mapa)
-    const deslocamentoLat = (p2[0] - p1[0]) * 0.2; // ajuste: 0.2 = 20% mais à direita
-    const deslocamentoLon = (p2[1] - p1[1]) * 0.5;
+    // Média das distâncias (em cm)
+    const distanciaMedia = ((d12 + d23 + d13) / 3) * 100;
 
-    midLat += deslocamentoLat;
-    midLon += deslocamentoLon;
+    // Ponto médio entre os três
+    let midLat = (p1[0] + p2[0] + p3[0]) / 3;
+    let midLon = (p1[1] + p2[1] + p3[1]) / 3;
 
     // Atualiza posição e texto do rótulo
     labelDistancia.setLatLng([midLat, midLon]);
     labelDistancia._icon.innerHTML = `
       <div style="color: black; font-weight: bold; text-shadow: 1px 1px 2px black; font-size: 14px;">
-        ${distancia.toFixed(1)} cm
+        Média: ${distanciaMedia.toFixed(1)} cm
       </div>`;
   }
 }
-
 
 // Sempre que Receiver 1 ou 2 atualizarem, reflete no mapa combinado
 db.ref("gnss/raw").on("value", snap => {
@@ -681,17 +907,29 @@ db.ref("gnss/raw2").on("value", snap => {
     if (data) atualizarMapaComparado(null, null, data.lat, data.lon);
   }
 });
+db.ref("gnss/raw3").on("value", snap => {
+  const raw = snap.val();
+  if (raw && raw.startsWith("$GPGGA")) {
+    const data = parseGGA(raw);
+    if (data) atualizarMapaComparado(null, null, null, null, data.lat, data.lon);
+  }
+});
 
 function clearCombinedPaths() {
   pathComp1.length = 0;
   pathComp2.length = 0;
+  pathComp3.length = 0;
+
 
   polylineComp1.setLatLngs([]);
   polylineComp2.setLatLngs([]);
+  polylineComp3.setLatLngs([]);
+
 
   const initialLat = -30.0, initialLon = -51.0;
   markerComp1.setLatLng([initialLat, initialLon]);
   markerComp2.setLatLng([initialLat, initialLon]);
+  markerComp3.setLatLng([initialLat, initialLon]);
 
   mapComparado.setView([initialLat, initialLon], 19);
 
@@ -701,6 +939,8 @@ function clearCombinedPaths() {
 
 
   </script>
+
+
 
 
 <!-- <script src="script.js"></script> -->
@@ -743,7 +983,16 @@ function clearCombinedPaths() {
           backgroundColor: 'rgba(54, 162, 235, 0.2)',
           fill: false,
           tension: 0.1
+        },
+        {
+          label: 'Receiver 3',
+          data: [],
+          borderColor: 'rgba(75, 192, 192, 1)', // verde água
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: false,
+          tension: 0.1
         }
+
       ]
     },
     options: {
@@ -801,7 +1050,17 @@ function clearCombinedPaths() {
             backgroundColor: 'rgba(54, 162, 235, 0.2)',
             fill: false,
             tension: 0.1
+          },
+          
+          {
+            label: 'Receiver 3',
+            data: [],
+             borderColor: 'rgba(75, 192, 192, 1)', // verde água
+             backgroundColor: 'rgba(75, 192, 192, 0.2)',
+             fill: false,
+             tension: 0.1
           }
+
         ]
       },
       options: {

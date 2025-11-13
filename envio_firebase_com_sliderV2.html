@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Envio Rápido para Firebase</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+static.com/firebasejs/8.10.0/firebase-database.js
+</head>
+<body>
+  <h3>Envio de Arquivos para Firebase</h3>
+
+  <label>Arquivo 1:</label>
+  <input type="file" id="file1"><br><br>
+
+  <label>Arquivo 2:</label>
+  <input type="file" id="file2"><br><br>
+
+  <label>Arquivo 3:</label>
+  <input type="file" id="file3"><br><br>
+
+  <label>Velocidade de envio (ms entre linhas):</label>
+  <input type="range" id="speedSlider" min="1" max="1000" value="10" step="1" oninput="updateSpeedLabel(this.value)">
+ Filter">Filtro NMEA:</label>
+  <select id="nmeaFilter">
+    <option value="ALL">Sem filtro</option>
+    <option value="ANY">Mostrar todas sentenças</option>
+    <option value="$GPGGA">$GPGGA</option>
+    <option value="$GPRMC">$GPRMC</option>
+    <option value="$GPVTG">$GPVTG</option>
+    <option value="$GPGSA">$GPGSA</option>
+    <option value="$GPGSV">$GPGSV</option>
+    <option value="$GPGST">$GPGST</option>
+    <option value="$GPTXT">$GPTXT</option>
+    <option value="$GPZDA">$GPZDA</option>
+  </select><br><br>
+
+  <button onclick="play()">▶️ Play</button>
+  <button onclick="pause()">⏸️ Pause</button><br><br>
+
+  <div id="status">Aguardando arquivos...</div>
+
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyAxziLelCdeXbYmmkh9LcvcwkHgXld024M",
+      authDomain: "log--analyzer-web.firebaseapp.com",
+      databaseURL: "https://log--analyzer-web-default-rtdb.firebaseio.com",
+      projectId: "log--analyzer-web",
+      storageBucket: "log--analyzer-web.appspot.com",
+      messagingSenderId: "908592112855",
+      appId: "1:908592112855:web:ae60fc51e47a66390f3c92",
+      measurementId: "G-PEWMF5LTLQ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+
+    let linhas1 = [], linhas2 = [], linhas3 = [];
+    let index = 0;
+    let intervalo = null;
+    let isPaused = true;
+    let delay = 10;
+
+    function updateSpeedLabel(val) {
+      document.getElementById("speedValue").innerText = val;
+      delay = parseInt(val);
+    }
+
+    function carregarArquivo(inputId, destino) {
+      document.getElementById(inputId).addEventListener("change", function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          destino.length = 0;
+          destino.push(...e.target.result.split(/\r?\n/));
+          atualizarStatus();
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    function atualizarStatus() {
+      document.getElementById("status").innerText =
+        `Arquivo 1: ${linhas1.length} linhas | Arquivo 2: ${linhas2.length} linhas | Arquivo 3: ${linhas3.length} linhas`;
+    }
+
+    carregarArquivo("file1", linhas1);
+    carregarArquivo("file2", linhas2);
+    carregarArquivo("file3", linhas3);
+
+    function aplicaFiltro(linha, filtro) {
+      if (filtro === "ALL") return true;
+      if (filtro === "ANY") return linha.startsWith("$");
+      return linha.startsWith(filtro);
+    }
+
+    function play() {
+      if (linhas1.length === 0 || linhas2.length === 0 || linhas3.length === 0) {
+        alert("Selecione os três arquivos primeiro.");
+        return;
+      }
+      if (!isPaused) return;
+      isPaused = false;
+      index = 0;
+
+      const totalLinhas = Math.max(linhas1.length, linhas2.length, linhas3.length);
+      const filtro = document.getElementById("nmeaFilter").value;
+
+      intervalo = setInterval(() => {
+        if (index < totalLinhas && !isPaused) {
+          const linha1 = linhas1[index] ? linhas1[index].trim() : "";
+          const linha2 = linhas2[index] ? linhas2[index].trim() : "";
+          const linha3 = linhas3[index] ? linhas3[index].trim() : "";
+
+          let dados = {};
+          if (linha1 && aplicaFiltro(linha1, filtro)) dados.raw = linha1;
+          if (linha2 && aplicaFiltro(linha2, filtro)) dados.raw2 = linha2;
+          if (linha3 && aplicaFiltro(linha3, filtro)) dados.raw3 = linha3;
+
+          if (Object.keys(dados).length > 0) {
+            db.ref("gnss").update(dados);
+          }
+
+          document.getElementById("status").innerText =
+            `Enviando linha ${index + 1} de ${totalLinhas} | Velocidade: ${delay} ms`;
+
+          index++;
+        } else {
+          clearInterval(intervalo);
+          document.getElementById("status").innerText += " | Envio concluído.";
+        }
+      }, delay);
+    }
+
+    function pause() {
+      isPaused = true;
+      clearInterval(intervalo);
+      document.getElementById("status").innerText += " | Envio pausado.";
+    }
+  </script>
+</body>
+</html>
