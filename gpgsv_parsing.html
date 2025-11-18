@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parsing NMEA GSV com Nome do Satélite</title>
+</head>
+<body>
+    <h2>Parsing NMEA GSV</h2>
+    <textarea id="nmeaInput" rows="4" cols="80" placeholder="Cole aqui a sentença NMEA GSV"></textarea><br><br>
+    <button onclick="parseGSV()">Parse</button>
+    <div id="result"></div>
+
+    <script>
+        function identifySatellite(prn) {
+            prn = parseInt(prn);
+            if (prn >= 1 && prn <= 32) return {constellation: "GPS", name: `GPS PRN ${prn}`};
+            if (prn >= 33 && prn <= 64) return {constellation: "SBAS", name: `SBAS PRN ${prn}`};
+            if (prn >= 65 && prn <= 96) return {constellation: "GLONASS", name: `GLONASS PRN ${prn}`};
+            if (prn >= 193 && prn <= 200) return {constellation: "QZSS", name: `QZSS PRN ${prn}`};
+            if (prn >= 201 && prn <= 237) return {constellation: "BeiDou", name: `BeiDou PRN ${prn}`};
+            if (prn >= 301 && prn <= 336) return {constellation: "Galileo", name: `Galileo PRN ${prn}`};
+            return {constellation: "Desconhecido", name: `PRN ${prn}`};
+        }
+
+        function parseGSV() {
+            const sentence = document.getElementById("nmeaInput").value.trim();
+            const parts = sentence.split(",");
+            if (!parts[0].endsWith("GSV")) {
+                document.getElementById("result").innerHTML = "<p>Sentença não é GSV!</p>";
+                return;
+            }
+
+            const totalSats = parts[3];
+            let output = `<p>Total de satélites visíveis: ${totalSats}</p><ul>`;
+            for (let i = 4; i < parts.length - 1; i += 4) {
+                if (parts[i]) {
+                    const prn = parts[i];
+                    const elev = parts[i + 1];
+                    const azim = parts[i + 2];
+                    const snr = parts[i + 3];
+                    const satInfo = identifySatellite(prn);
+                    output += `<li>${satInfo.name} (${satInfo.constellation}) | Elevação: ${elev}° | Azimute: ${azim}° | SNR: ${snr}</li>`;
+                }
+            }
+            output += "</ul>";
+            document.getElementById("result").innerHTML = output;
+        }
+    </script>
+</body>
+</html>
