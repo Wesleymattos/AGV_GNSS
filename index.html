@@ -449,12 +449,29 @@ const gpsIcon = L.icon({
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 35 }).addTo(map3);
 
+
+    
+
+
 // Usa o novo ícone no marcador
 let marker1 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map1);
+marker1.bindTooltip("Receiver 1", { permanent: true, direction: "top", offset: [0, -50] });
 let marker2 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map2);
+marker2.bindTooltip("Receiver 2", { permanent: true, direction: "top", offset: [0, -50] });
 let marker3 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map3);
+marker3.bindTooltip("Receiver 3", { permanent: true, direction: "top", offset: [0, -50] });
     let path1 = [], path2 = [], path3 = [];
-    
+        
+
+
+// Callback do Firebase só atualiza nomes e posições
+firebase.database().ref('receiver').on('value', (snapshot) => {
+  const receiverData = snapshot.val();
+
+  marker1.bindTooltip(receiverData.receiver1, { permanent: true, direction: "top", offset: [0, -50] });
+  marker2.bindTooltip(receiverData.receiver2, { permanent: true, direction: "top", offset: [0, -50] });
+  marker3.bindTooltip(receiverData.receiver3, { permanent: true, direction: "top", offset: [0, -50] });
+});
     
     let polyline1 = L.polyline([], { color: 'red' }).addTo(map1);
     let polyline2 = L.polyline([], { color: 'blue' }).addTo(map2);
@@ -879,8 +896,11 @@ const icon2 = L.icon({
 });
 
 let markerComp1 = L.marker([-30, -51], { icon: icon1 }).addTo(mapComparado);
+markerComp1.bindTooltip("Receiver 1", { permanent: true, direction: "top", offset: [0, -50] });
 let markerComp2 = L.marker([-30, -51], { icon: icon2 }).addTo(mapComparado);
+markerComp2.bindTooltip("Receiver 2", { permanent: true, direction: "top", offset: [0, -50] });
 let markerComp3 = L.marker([-30, -51], { icon: icon2 }).addTo(mapComparado);
+markerComp3.bindTooltip("Receiver 3", { permanent: true, direction: "top", offset: [0, -50] });
 
 
 let polylineComp1 = L.polyline([], { color: 'red' }).addTo(mapComparado);
@@ -890,6 +910,23 @@ let polylineComp3 = L.polyline([], { color: 'green' }).addTo(mapComparado);
 let pathComp1 = [];
 let pathComp2 = [];
 let pathComp3 = [];
+
+
+// Callback do Firebase só atualiza nomes e posições
+firebase.database().ref('receiver').on('value', (snapshot) => {
+  const receiverData = snapshot.val();
+
+  // Atualiza nomes
+  markerComp1.bindTooltip(receiverData.receiver1, { permanent: true, direction: "top", offset: [0, -50] });
+  markerComp2.bindTooltip(receiverData.receiver2, { permanent: true, direction: "top", offset: [0, -50] });
+  markerComp3.bindTooltip(receiverData.receiver3, { permanent: true, direction: "top", offset: [0, -50] });
+
+  // Se tiver coordenadas no banco, atualiza posição
+  // markerComp1.setLatLng([receiverData.coords1.lat, receiverData.coords1.lng]);
+  // markerComp2.setLatLng([receiverData.coords2.lat, receiverData.coords2.lng]);
+  // markerComp3.setLatLng([receiverData.coords3.lat, receiverData.coords3.lng]);
+});
+
 
 // Atualiza o mapa combinado sempre que houver novas coordenadas
 function atualizarMapaComparado(lat1, lon1, lat2, lon2, lat3, lon3) {
@@ -1232,7 +1269,7 @@ function clearCombinedPaths() {
 
 
       <footer>
-    Desenvolvido por Wesley de Mattos — versão: 2.3.0 — <span id="ano"></span>
+    Desenvolvido por Wesley de Mattos — versão: 2.4.0 — <span id="ano"></span>
   </footer>
  
   <script>

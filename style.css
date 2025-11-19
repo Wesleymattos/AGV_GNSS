@@ -30,6 +30,18 @@ body {
   margin-top: 10px;
 }
 
+
+
+.leaflet-tooltip {
+  background-color: white;
+  border: 1px solid #333;
+  color: black;
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+
     footer {
       text-align: center;
       color: #666;
