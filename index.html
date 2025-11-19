@@ -100,7 +100,7 @@
         <button id="startBtn">Iniciar Log</button>
         <button id="pauseBtn" disabled>Pausar Log</button>
         <button id="stopBtn" disabled>Parar Log</button>
-        <button onclick="downloadKML(path1, 'antena1.kml')">Download KML 1</button>
+        <button onclick="downloadKML(path1, receiver1)">Download KML 1</button>
         <button onclick="clearPath(path1, polyline1)">Limpar Linha</button>
       </div>
       <div id="map1" class="map"></div>
@@ -147,7 +147,7 @@
         <button id="startBtn2">Iniciar Log 2</button>
         <button id="pauseBtn2" disabled>Pausar Log 2</button>
         <button id="stopBtn2" disabled>Parar Log 2</button>
-        <button onclick="downloadKML(path2, 'antena2.kml')">Download KML 2</button>
+        <button onclick="downloadKML(path2, receiver2)">Download KML 2</button>
         <button onclick="clearPath(path2, polyline2)">Limpar Linha</button>
       </div>
       <div id="map2" class="map"></div>
@@ -192,7 +192,7 @@
     <button id="startBtn3">Iniciar Log 3</button>
     <button id="pauseBtn3" disabled>Pausar Log 3</button>
     <button id="stopBtn3" disabled>Parar Log 3</button>
-    <button onclick="downloadKML(path3, 'antena3.kml')">Download KML 3</button>
+    <button onclick="downloadKML(path3, receiver3)">Download KML 3</button>
     <button onclick="clearPath(path3, polyline3)">Limpar Linha</button>
   </div>
   <div id="map3" class="map"></div>
@@ -440,17 +440,21 @@ let marker3 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map3);
       polyline.setLatLngs([]);
     }
 
-    function downloadKML(path, filename) {
-      if (!path.length) return;
-      let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<Placemark><LineString><coordinates>` +
+function downloadKML(path, receiverName) {
+    if (!path.length) return;
+
+    let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<Placemark><LineString><coordinates>` +
         path.map(p => `${p[1]},${p[0]},0`).join(' ') +
         `</coordinates></LineString></Placemark></Document></kml>`;
-      const blob = new Blob([kml], { type: "application/vnd.google-earth.kml+xml" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
-    }
+
+    const blob = new Blob([kml], { type: "application/vnd.google-earth.kml+xml" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+
+    // Nome do arquivo usando receptor + timestamp
+    a.download = `${receiverName}_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.kml`;
+    a.click();
+}
 
     const terminal = document.getElementById("terminal");
     const terminal2 = document.getElementById("terminal2");
@@ -471,19 +475,30 @@ let marker3 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map3);
       document.getElementById("pauseBtn").textContent = isPaused ? "Retomar Log" : "Pausar Log";
       appendToTerminal(terminal, isPaused ? ">>> LOG PAUSADO" : ">>> LOG RETOMADO");
     };
-    document.getElementById("stopBtn").onclick = () => {
-      isLogging = false;
-      isPaused = false;
-      appendToTerminal(terminal, ">>> LOG PARADO");
-      document.getElementById("startBtn").disabled = false;
-      document.getElementById("pauseBtn").disabled = true;
-      document.getElementById("stopBtn").disabled = true;
-      const blob = new Blob([logLines.join('\n')], { type: "text/plain;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `log_antena1_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
-      a.click();
-    };
+ let receiver1 = ""; // variável global
+
+// Lê do Firebase e guarda
+db.ref("receiver/receiver1").on("value", snap => {
+    receiver1 = snap.val();
+});
+
+document.getElementById("stopBtn").onclick = () => {
+    isLogging = false;
+    isPaused = false;
+    appendToTerminal(terminal, ">>> LOG PARADO");
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("pauseBtn").disabled = true;
+    document.getElementById("stopBtn").disabled = true;
+
+    // Cria o arquivo com as linhas do log
+    const blob = new Blob([logLines.join('\n')], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+
+    // Usa o nome do receiver + timestamp
+    a.download = `${receiver1}_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+    a.click();
+};
 
     let isLogging2 = false, isPaused2 = false, logLines2 = [];
     document.getElementById("startBtn2").onclick = () => {
@@ -500,20 +515,33 @@ let marker3 = L.marker([-30, -51], { icon: gpsIcon }).addTo(map3);
       document.getElementById("pauseBtn2").textContent = isPaused2 ? "Retomar Log 2" : "Pausar Log 2";
       appendToTerminal(terminal2, isPaused2 ? ">>> LOG 2 PAUSADO" : ">>> LOG 2 RETOMADO");
     };
-    document.getElementById("stopBtn2").onclick = () => {
-      isLogging2 = false;
-      isPaused2 = false;
-      appendToTerminal(terminal2, ">>> LOG 2 PARADO");
-      document.getElementById("startBtn2").disabled = false;
-      document.getElementById("pauseBtn2").disabled = true;
-      document.getElementById("stopBtn2").disabled = true;
-      const blob = new Blob([logLines2.join('\n')], { type: "text/plain;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `log_antena2_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
-      a.click();
-    };
 
+
+    
+let receiver2 = "";
+
+// Lê o valor do Firebase e guarda na variável global
+db.ref("receiver/receiver2").on("value", snap => {
+    receiver2 = snap.val();
+});
+
+document.getElementById("stopBtn2").onclick = () => {
+    isLogging2 = false;
+    isPaused2 = false;
+    appendToTerminal(terminal2, ">>> LOG 2 PARADO");
+    document.getElementById("startBtn2").disabled = false;
+    document.getElementById("pauseBtn2").disabled = true;
+    document.getElementById("stopBtn2").disabled = true;
+
+    // Cria o arquivo com as linhas do log 2
+    const blob = new Blob([logLines2.join('\n')], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+
+    // Nome do arquivo usando receiver2 + timestamp
+    a.download = `${receiver2}_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+    a.click();
+};
     
 let isLogging3 = false, isPaused3 = false, logLines3 = [];
 
@@ -532,19 +560,29 @@ document.getElementById("pauseBtn3").onclick = () => {
   document.getElementById("pauseBtn3").textContent = isPaused3 ? "Retomar Log 3" : "Pausar Log 3";
   appendToTerminal(terminal3, isPaused3 ? ">>> LOG 3 PAUSADO" : ">>> LOG 3 RETOMADO");
 };
+let receiver3 = "";
+
+// Lê o valor do Firebase e guarda na variável global
+db.ref("receiver/receiver3").on("value", snap => {
+    receiver3 = snap.val();
+});
 
 document.getElementById("stopBtn3").onclick = () => {
-  isLogging3 = false;
-  isPaused3 = false;
-  appendToTerminal(terminal3, ">>> LOG 3 PARADO");
-  document.getElementById("startBtn3").disabled = false;
-  document.getElementById("pauseBtn3").disabled = true;
-  document.getElementById("stopBtn3").disabled = true;
-  const blob = new Blob([logLines3.join('\n')], { type: "text/plain;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `log_antena3_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
-  a.click();
+    isLogging3 = false;
+    isPaused3 = false;
+    appendToTerminal(terminal3, ">>> LOG 3 PARADO");
+    document.getElementById("startBtn3").disabled = false;
+    document.getElementById("pauseBtn3").disabled = true;
+    document.getElementById("stopBtn3").disabled = true;
+
+    // Cria o arquivo com as linhas do log 3
+    const blob = new Blob([logLines3.join('\n')], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+
+    // Nome do arquivo usando receiver3 + timestamp
+    a.download = `${receiver3}_${new Date().toISOString().replace(/[:T]/g,"-").slice(0,19)}.txt`;
+    a.click();
 };
 
 
@@ -1169,7 +1207,7 @@ function clearCombinedPaths() {
 
 
       <footer>
-    Desenvolvido por Wesley de Mattos — versão: 2.1.0 — <span id="ano"></span>
+    Desenvolvido por Wesley de Mattos — versão: 2.2.0 — <span id="ano"></span>
   </footer>
  
   <script>
